@@ -3,6 +3,7 @@ from typing import List
 from models import Cocktail
 from database import get_db_connection
 from fastapi import Query
+from fastapi import Request
 
 router = APIRouter()
 
@@ -55,3 +56,38 @@ def search_cocktails(query: str = Query(..., min_length=1)):
             all_results.append(dict(row))
 
     return all_results
+
+@router.get("/available", response_model=List[Cocktail])
+def get_available_cocktails(has: str = Query(..., description="Comma-separated list of ingredients")):
+    user_ingredients = [i.strip().lower() for i in has.split(",")]
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    rows = cursor.execute("""
+        SELECT id, strDrink, strCategory, strAlcoholic, strGlass, strDrinkThumb,
+               strIngredient1, strIngredient2, strIngredient3, strIngredient4, strIngredient5,
+               strIngredient6, strIngredient7, strIngredient8, strIngredient9, strIngredient10,
+               strIngredient11, strIngredient12, strIngredient13, strIngredient14, strIngredient15
+        FROM drinks
+    """).fetchall()
+    conn.close()
+
+    results = []
+    for row in rows:
+        ingredients = [row[f"strIngredient{i}"] for i in range(1, 16) if row[f"strIngredient{i}"]]
+        ingredients_lower = [ing.lower() for ing in ingredients]
+
+        # Check if ALL ingredients exist in user's list
+        if all(ing in user_ingredients for ing in ingredients_lower):
+            # Trim to only required fields
+            results.append({
+                "id": row["id"],
+                "strDrink": row["strDrink"],
+                "strCategory": row["strCategory"],
+                "strAlcoholic": row["strAlcoholic"],
+                "strGlass": row["strGlass"],
+                "strDrinkThumb": row["strDrinkThumb"]
+            })
+
+    return results

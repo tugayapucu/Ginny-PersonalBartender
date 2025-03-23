@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from typing import List
 from models import Cocktail
+import random
 from database import get_db_connection
 from fastapi import Query
 from fastapi import Request
@@ -91,3 +92,27 @@ def get_available_cocktails(has: str = Query(..., description="Comma-separated l
             })
 
     return results
+
+import random
+
+@router.get("/random", response_model=Cocktail)
+def get_random_cocktail():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Get total number of drinks
+    count = cursor.execute("SELECT COUNT(*) FROM drinks").fetchone()[0]
+
+    # Pick a random offset
+    random_offset = random.randint(0, count - 1)
+
+    # Get 1 random drink
+    row = cursor.execute("""
+        SELECT id, strDrink, strCategory, strAlcoholic, strGlass, strDrinkThumb
+        FROM drinks
+        LIMIT 1 OFFSET ?
+    """, (random_offset,)).fetchone()
+
+    conn.close()
+
+    return dict(row)

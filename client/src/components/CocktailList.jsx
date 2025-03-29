@@ -5,12 +5,11 @@ const CocktailList = () => {
   const [cocktails, setCocktails] = useState([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
 
-  // Real-time search effect
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       setLoading(true);
-
       const fetchData = async () => {
         try {
           const res = query.trim()
@@ -25,10 +24,21 @@ const CocktailList = () => {
       };
 
       fetchData();
-    }, 100); // 400ms debounce to reduce rapid API calls
+    }, 400);
 
     return () => clearTimeout(delayDebounce);
   }, [query]);
+
+  // Handle smooth loader display
+  useEffect(() => {
+    let loaderTimeout;
+    if (loading) {
+      loaderTimeout = setTimeout(() => setShowLoader(true), 300); // only show after 300ms
+    } else {
+      setShowLoader(false);
+    }
+    return () => clearTimeout(loaderTimeout);
+  }, [loading]);
 
   return (
     <div className="px-4 max-w-4xl mx-auto">
@@ -42,7 +52,7 @@ const CocktailList = () => {
         />
       </div>
 
-      {loading && <p className="text-center">Loading...</p>}
+      {showLoader && <p className="text-center">Loading...</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {cocktails.map((cocktail) => (

@@ -6,34 +6,29 @@ const CocktailList = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch initial cocktails (optional)
+  // Real-time search effect
   useEffect(() => {
-    setLoading(true);
-    fetchCocktails()
-      .then((res) => {
-        setCocktails(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching cocktails:", err);
-        setLoading(false);
-      });
-  }, []);
+    const delayDebounce = setTimeout(() => {
+      setLoading(true);
 
-  const handleSearch = () => {
-    if (!query.trim()) return;
+      const fetchData = async () => {
+        try {
+          const res = query.trim()
+            ? await searchCocktails(query)
+            : await fetchCocktails();
+          setCocktails(res.data);
+        } catch (err) {
+          console.error("Search error:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
 
-    setLoading(true);
-    searchCocktails(query)
-      .then((res) => {
-        setCocktails(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Search error:", err);
-        setLoading(false);
-      });
-  };
+      fetchData();
+    }, 100); // 400ms debounce to reduce rapid API calls
+
+    return () => clearTimeout(delayDebounce);
+  }, [query]);
 
   return (
     <div className="px-4 max-w-4xl mx-auto">
@@ -45,12 +40,6 @@ const CocktailList = () => {
           onChange={(e) => setQuery(e.target.value)}
           className="w-full max-w-md border rounded px-4 py-2"
         />
-        <button
-          onClick={handleSearch}
-          className="bg-black text-white px-6 py-2 rounded hover:opacity-90"
-        >
-          Search
-        </button>
       </div>
 
       {loading && <p className="text-center">Loading...</p>}

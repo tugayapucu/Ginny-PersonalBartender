@@ -6,3 +6,4 @@ const API = axios.create({
 
 export const fetchCocktails = () => API.get('/cocktails');
 export const searchCocktails = (query) => API.get(`/search?query=${query}`);
+export const getRandomCocktail = () => API.get("/random");

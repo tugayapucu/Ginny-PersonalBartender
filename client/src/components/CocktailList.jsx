@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { fetchCocktails, searchCocktails } from "../api";
+import { fetchCocktails, searchCocktails, getRandomCocktail } from "../api";
 
 const CocktailList = () => {
   const [cocktails, setCocktails] = useState([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
+  const [randomCocktail, setRandomCocktail] = useState(null);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -40,6 +41,16 @@ const CocktailList = () => {
     return () => clearTimeout(loaderTimeout);
   }, [loading]);
 
+  // Surprise Me button logic
+  const handleSurprise = async () => {
+    try {
+      const res = await getRandomCocktail();
+      setRandomCocktail(res.data);
+    } catch (err) {
+      console.error("Failed to fetch random cocktail", err);
+    }
+  };
+
   return (
     <div className="px-4 max-w-4xl mx-auto">
       <div className="flex flex-col items-center gap-4 mb-6">
@@ -50,7 +61,29 @@ const CocktailList = () => {
           onChange={(e) => setQuery(e.target.value)}
           className="w-full max-w-md border rounded px-4 py-2"
         />
+        <button
+          onClick={handleSurprise}
+          className="bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700"
+        >
+          🍀 Surprise Me
+        </button>
       </div>
+
+      {randomCocktail && (
+        <div className="mb-10 p-4 border rounded-lg shadow text-center bg-yellow-100">
+          <h2 className="text-xl font-bold mb-2">
+            🎉 You got: {randomCocktail.strDrink}
+          </h2>
+          <img
+            src={randomCocktail.strDrinkThumb}
+            alt={randomCocktail.strDrink}
+            className="w-full max-w-xs mx-auto rounded"
+          />
+          <p className="mt-2 text-sm text-gray-600">
+            {randomCocktail.strCategory} — {randomCocktail.strGlass}
+          </p>
+        </div>
+      )}
 
       {showLoader && <p className="text-center">Loading...</p>}
 

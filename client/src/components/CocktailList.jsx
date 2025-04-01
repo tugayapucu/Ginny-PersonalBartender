@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { fetchCocktails, searchCocktails, getRandomCocktail } from "../api";
 
 const CocktailList = () => {
@@ -89,18 +90,17 @@ const CocktailList = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {cocktails.map((cocktail) => (
-          <div
-            key={cocktail.id}
-            className="border rounded-xl shadow p-4 text-center hover:scale-105 transition"
-          >
-            <img
-              src={cocktail.strDrinkThumb}
-              alt={cocktail.strDrink}
-              className="w-full h-48 object-cover rounded"
-            />
-            <h3 className="text-lg font-bold mt-4">{cocktail.strDrink}</h3>
-            <p className="text-sm text-gray-600">{cocktail.strCategory}</p>
-          </div>
+          <Link to={`/cocktails/${cocktail.id}`} key={cocktail.id}>
+            <div className="border rounded-xl shadow p-4 text-center hover:scale-105 transition cursor-pointer">
+              <img
+                src={cocktail.strDrinkThumb}
+                alt={cocktail.strDrink}
+                className="w-full h-48 object-cover rounded"
+              />
+              <h3 className="text-lg font-bold mt-4">{cocktail.strDrink}</h3>
+              <p className="text-sm text-gray-600">{cocktail.strCategory}</p>
+            </div>
+          </Link>
         ))}
       </div>
     </div>

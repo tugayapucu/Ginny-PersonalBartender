@@ -1,33 +1,38 @@
 .available-cocktails {
     padding: 2rem;
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     font-family: 'Segoe UI', sans-serif;
   }
   
   .available-cocktails h2 {
-    font-size: 2rem;
+    font-size: 2.4rem;
     margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   
   .available-cocktails input {
-    padding: 8px 12px;
+    padding: 10px 14px;
     font-size: 1rem;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid #ccc;
-    margin-right: 8px;
+    margin-right: 10px;
     width: 60%;
-    max-width: 300px;
+    max-width: 350px;
+    box-sizing: border-box;
   }
   
   .available-cocktails button {
-    padding: 8px 16px;
+    padding: 10px 18px;
     font-size: 1rem;
     border: none;
     background-color: #4caf50;
     color: white;
     border-radius: 6px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
   }
   
   .available-cocktails button:hover {
@@ -37,52 +42,79 @@
   .ingredients-list {
     margin-top: 1rem;
     margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
   
   .ingredients-list span {
-    margin: 4px;
-    padding: 6px 10px;
-    background-color: #eee;
-    border-radius: 12px;
-    display: inline-block;
+    padding: 6px 12px;
+    background-color: #ddd;
+    border-radius: 20px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
   
   .ingredients-list button {
     background: none;
     border: none;
-    color: #888;
-    margin-left: 6px;
+    color: #666;
+    font-size: 1rem;
     cursor: pointer;
   }
   
   .cocktail-results {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
   }
   
   .cocktail-card {
-    background-color: #f9f9f9;
-    border-radius: 8px;
+    background-color: #fff;
+    border-radius: 10px;
     padding: 1rem;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease;
+  }
+  
+  .cocktail-card:hover {
+    transform: scale(1.02);
   }
   
   .cocktail-card img {
     width: 100%;
-    height: auto;
-    border-radius: 6px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
   }
   
   .cocktail-card h3 {
     margin-top: 0.5rem;
     font-size: 1.1rem;
+    font-weight: bold;
   }
   
   .cocktail-card p {
     margin: 0.2rem 0;
     font-size: 0.9rem;
     color: #555;
+  }
+  
+  .clear-btn {
+    margin-left: 10px;
+    background-color: #e53935;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .clear-btn:hover {
+    background-color: #d32f2f;
   }
   

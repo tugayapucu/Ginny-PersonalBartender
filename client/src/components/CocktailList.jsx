@@ -9,6 +9,20 @@ const CocktailList = () => {
   const [showLoader, setShowLoader] = useState(false);
   const [randomCocktail, setRandomCocktail] = useState(null);
 
+  // ✅ Favorites state from localStorage
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem("favorites");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const toggleFavorite = (id) => {
+    const updated = favorites.includes(id)
+      ? favorites.filter((fid) => fid !== id)
+      : [...favorites, id];
+    setFavorites(updated);
+    localStorage.setItem("favorites", JSON.stringify(updated));
+  };
+
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       setLoading(true);
@@ -31,18 +45,16 @@ const CocktailList = () => {
     return () => clearTimeout(delayDebounce);
   }, [query]);
 
-  // Handle smooth loader display
   useEffect(() => {
     let loaderTimeout;
     if (loading) {
-      loaderTimeout = setTimeout(() => setShowLoader(true), 300); // only show after 300ms
+      loaderTimeout = setTimeout(() => setShowLoader(true), 300);
     } else {
       setShowLoader(false);
     }
     return () => clearTimeout(loaderTimeout);
   }, [loading]);
 
-  // Surprise Me button logic
   const handleSurprise = async () => {
     try {
       const res = await getRandomCocktail();
@@ -91,7 +103,7 @@ const CocktailList = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {cocktails.map((cocktail) => (
           <Link to={`/cocktails/${cocktail.id}`} key={cocktail.id}>
-            <div className="border rounded-xl shadow p-4 text-center hover:scale-105 transition cursor-pointer">
+            <div className="border rounded-xl shadow p-4 text-center hover:scale-105 transition cursor-pointer relative">
               <img
                 src={cocktail.strDrinkThumb}
                 alt={cocktail.strDrink}
@@ -99,6 +111,17 @@ const CocktailList = () => {
               />
               <h3 className="text-lg font-bold mt-4">{cocktail.strDrink}</h3>
               <p className="text-sm text-gray-600">{cocktail.strCategory}</p>
+
+              {/* ❤️ Favorite Icon */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault(); // prevent navigating
+                  toggleFavorite(cocktail.id);
+                }}
+                className="absolute top-2 right-2 text-xl"
+              >
+                {favorites.includes(cocktail.id) ? "❤️" : "🤍"}
+              </button>
             </div>
           </Link>
         ))}

@@ -5,6 +5,7 @@ import Search from "./pages/Search";
 import Recipes from "./pages/Recipes";
 import CocktailDetail from "./pages/CocktailDetail";
 import AvailableCocktails from './pages/AvailableCocktails'
+import Favorites from './pages/Favorites';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/recipes" element={<Recipes />} /> 
         <Route path="/cocktails/:id" element={<CocktailDetail />} />
         <Route path="/available-cocktails" element={<AvailableCocktails />} />
+        <Route path="/favorites" element={<Favorites />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,24 +1,45 @@
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import Search from "./pages/Search";
 import Recipes from "./pages/Recipes";
+import AvailableCocktails from "./pages/AvailableCocktails";
+import Favorites from "./pages/Favorites";
 import CocktailDetail from "./pages/CocktailDetail";
-import AvailableCocktails from './pages/AvailableCocktails'
-import Favorites from './pages/Favorites';
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import "./App.css";
 
 function App() {
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.toggle("dark-mode", darkMode);
+  }, [darkMode]);
+
   return (
-    <BrowserRouter>
+    <Router>
+      <Navbar />
+      <div className="text-center my-4">
+        <button onClick={() => setDarkMode(!darkMode)} style={{
+          backgroundColor: "var(--button-bg)",
+          color: "var(--button-text)",
+          padding: "10px 20px",
+          borderRadius: "8px",
+          border: "none",
+          cursor: "pointer"
+        }}>
+          {darkMode ? "☀️ Light Mode" : "🌙 Dark Mode"}
+        </button>
+      </div>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/recipes" element={<Recipes />} /> 
-        <Route path="/cocktails/:id" element={<CocktailDetail />} />
-        <Route path="/available-cocktails" element={<AvailableCocktails />} />
+        <Route path="/recipes" element={<Recipes />} />
+        <Route path="/available" element={<AvailableCocktails />} />
         <Route path="/favorites" element={<Favorites />} />
+        <Route path="/cocktails/:id" element={<CocktailDetail />} />
       </Routes>
-    </BrowserRouter>
+      <Footer />
+    </Router>
   );
 }
 

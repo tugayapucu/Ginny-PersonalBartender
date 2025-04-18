@@ -2,3 +2,6 @@ fastapi
 uvicorn
 pydantic
 sqlite-utils
+sqlalchemy
+passlib
+jose

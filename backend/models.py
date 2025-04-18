@@ -1,5 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
+from pydantic import BaseModel
+from sqlalchemy import Column, Integer, String
+from database import Base
 
 class Cocktail(BaseModel):
     id: int
@@ -42,3 +45,11 @@ class Cocktail(BaseModel):
     strMeasure13: Optional[str] = None
     strMeasure14: Optional[str] = None
     strMeasure15: Optional[str] = None
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)

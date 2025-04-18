@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import cocktails  # your routes file
+from routers import cocktails
+from auth.routes import router as auth_router  # ✅ Add this line
 
 app = FastAPI(title="Ginny Personal Bartender API")
 
@@ -15,3 +16,4 @@ app.add_middleware(
 
 # Route registration
 app.include_router(cocktails.router)
+app.include_router(auth_router)

@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db_connection
+from database import get_db
 import models
 import schemas
 from security import hash_password, verify_password, create_access_token
 
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register")
-def register(data: schemas.RegisterRequest, db: Session = Depends(get_db_connection)):
+def register(data: schemas.RegisterRequest, db: Session = Depends(get_db)):
     if db.query(models.User).filter(models.User.email == data.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
     
@@ -23,7 +23,7 @@ def register(data: schemas.RegisterRequest, db: Session = Depends(get_db_connect
     return {"message": "User registered successfully"}
 
 @router.post("/login")
-def login(data: schemas.LoginRequest, db: Session = Depends(get_db_connection)):
+def login(data: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")

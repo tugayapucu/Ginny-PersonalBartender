@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from typing import List
 from models import Cocktail
 import random
-from database import get_db_connection
+from database import get_db
 from fastapi import Query
 from fastapi import Request
 
@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("/cocktails", response_model=List[Cocktail])
 def get_cocktails():
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     # ✅ Select all fields now that model is extended
@@ -21,7 +21,7 @@ def get_cocktails():
 
 @router.get("/cocktails/{id}", response_model=Cocktail)
 def get_cocktail_by_id(id: int):
-    conn = get_db_connection()
+    conn = get_db()
     row = conn.execute("SELECT * FROM drinks WHERE id = ?", (id,)).fetchone()
     conn.close()
     if row is None:
@@ -30,7 +30,7 @@ def get_cocktail_by_id(id: int):
 
 @router.get("/search", response_model=List[Cocktail])
 def search_cocktails(query: str = Query(..., min_length=1)):
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     # Check name match
@@ -65,7 +65,7 @@ def search_cocktails(query: str = Query(..., min_length=1)):
 def get_available_cocktails(has: str = Query(..., description="Comma-separated list of ingredients")):
     user_ingredients = [i.strip().lower() for i in has.split(",")]
 
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     rows = cursor.execute("SELECT * FROM drinks").fetchall()
@@ -88,7 +88,7 @@ import random
 
 @router.get("/random", response_model=Cocktail)
 def get_random_cocktail():
-    conn = get_db_connection()
+    conn = get_db()
     cursor = conn.cursor()
 
     # Get total number of drinks

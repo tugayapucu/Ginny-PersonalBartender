@@ -8,6 +8,7 @@ import CocktailDetail from "./pages/CocktailDetail";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import "./App.css";
+import Register from "./pages/Register";
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -37,6 +38,7 @@ function App() {
         <Route path="/available" element={<AvailableCocktails />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/cocktails/:id" element={<CocktailDetail />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
       <Footer />
     </Router>

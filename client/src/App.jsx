@@ -9,6 +9,8 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import "./App.css";
 import Register from "./pages/Register";
+import Login from './pages/Login';
+
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -39,6 +41,7 @@ function App() {
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/cocktails/:id" element={<CocktailDetail />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
       <Footer />
     </Router>

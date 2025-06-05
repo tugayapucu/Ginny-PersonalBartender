@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import useAuth from '../hooks/useAuth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth(); // ✅ use our modular login handler
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -16,8 +18,8 @@ const Login = () => {
         email,
         password,
       });
-      localStorage.setItem('token', res.data.access_token);
-      navigate('/'); // Redirect to homepage after login
+      login(res.data.access_token); // ✅ use the hook instead of localStorage directly
+      navigate('/'); // Redirect after login
     } catch (err) {
       setError(err.response?.data?.detail || 'Login failed');
     }

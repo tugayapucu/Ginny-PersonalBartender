@@ -10,6 +10,7 @@ import Footer from "./components/Footer";
 import "./App.css";
 import Register from "./pages/Register";
 import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 function App() {
@@ -37,11 +38,25 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/recipes" element={<Recipes />} />
-        <Route path="/available" element={<AvailableCocktails />} />
-        <Route path="/favorites" element={<Favorites />} />
         <Route path="/cocktails/:id" element={<CocktailDetail />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route
+          path="/available"
+          element={
+            <ProtectedRoute>
+              <AvailableCocktails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/favorites"
+          element={
+            <ProtectedRoute>
+              <Favorites />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
       <Footer />
     </Router>

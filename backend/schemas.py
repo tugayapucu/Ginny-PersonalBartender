@@ -8,3 +8,6 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+class FavoriteCreate(BaseModel):
+    cocktail_id: str

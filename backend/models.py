@@ -1,7 +1,8 @@
 from pydantic import BaseModel
 from typing import Optional
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from database import Base
 
 class Cocktail(BaseModel):
@@ -53,3 +54,15 @@ class User(Base):
     username = Column(String(100), unique=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
+
+class Favorite(Base):
+    __tablename__ = "favorites"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    cocktail_id = Column(String, nullable=False)
+
+    user = relationship("User", back_populates="favorites")
+
+
+# Update User model if not already done
+User.favorites = relationship("Favorite", back_populates="user", cascade="all, delete")

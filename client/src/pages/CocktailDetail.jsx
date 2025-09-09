@@ -1,19 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import { CocktailApi } from "../api";
 
 const CocktailDetail = () => {
   const { id } = useParams();
   const [cocktail, setCocktail] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    axios
-      .get(`http://127.0.0.1:8000/cocktails/${id}`)
-      .then((res) => setCocktail(res.data))
-      .catch((err) => console.error("Failed to load cocktail", err));
+    const fetchCocktail = async () => {
+      try {
+        setLoading(true);
+        // Use CocktailApi instead of direct axios
+        const data = await CocktailApi.getCocktail(id);
+        setCocktail(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCocktail();
   }, [id]);
 
-  if (!cocktail) return <p className="text-center mt-10">Loading cocktail...</p>;
+  if (loading) return <p className="text-center mt-10">Loading cocktail...</p>;
+  if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
+  if (!cocktail) return <p className="text-center mt-10">Cocktail not found</p>;
 
   // Extract ingredients & measures
   const ingredients = [];
@@ -38,7 +52,9 @@ const CocktailDetail = () => {
           <li key={idx}>{item}</li>
         ))}
       </ul>
-      <p className="text-left">{cocktail.strInstructions || "No instructions available."}</p>
+      <p className="text-left">
+        {cocktail.strInstructions || "No instructions available."}
+      </p>
     </div>
   );
 };

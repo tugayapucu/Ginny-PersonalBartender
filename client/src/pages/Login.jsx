@@ -1,65 +1,66 @@
-import { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
+import { AuthApi } from "../api";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth(); // ✅ use our modular login handler
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
+    setLoading(true);
+
     try {
-      const res = await axios.post('http://127.0.0.1:8000/auth/login', {
-        email,
-        password,
-      });
-      login(res.data.access_token); // ✅ use the hook instead of localStorage directly
-      navigate('/'); // Redirect after login
+      // Use AuthApi instead of direct axios
+      const result = await AuthApi.login({ email, password });
+      login(result.access_token);
+      navigate("/");
     } catch (err) {
-      setError(err.response?.data?.detail || 'Login failed');
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-md"
-      >
-        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-        {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm mb-2">Email</label>
+      <div className="bg-white p-8 rounded shadow-md w-96">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        <form onSubmit={handleLogin} className="space-y-4">
           <input
-            className="shadow border rounded w-full py-2 px-3 text-gray-700"
             type="email"
+            placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={loading}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
-        </div>
-        <div className="mb-6">
-          <label className="block text-gray-700 text-sm mb-2">Password</label>
           <input
-            className="shadow border rounded w-full py-2 px-3 text-gray-700"
             type="password"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={loading}
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
-        >
-          Log In
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700 disabled:opacity-50"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+        </form>
+      </div>
     </div>
   );
 };

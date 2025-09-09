@@ -1,11 +1,6 @@
 import API from "./config";
 
-// 🍹 **COCKTAIL SERVICE - Complete CRUD Operations**
-// This handles all cocktail-related API calls
-
 class CocktailApi {
-  // 📋 **GET: Fetch all cocktails**
-  // Used in: CocktailList component, Home page
   static async getCocktails() {
     try {
       const response = await API.get("/cocktails");
@@ -17,8 +12,6 @@ class CocktailApi {
     }
   }
 
-  // 🔍 **GET: Get single cocktail by ID**
-  // Used in: CocktailDetail page, favorites expansion
   static async getCocktail(cocktailId) {
     try {
       const response = await API.get(`/cocktails/${cocktailId}`);
@@ -30,8 +23,6 @@ class CocktailApi {
     }
   }
 
-  // 🔄 **PUT: Update cocktail**
-  // Note: Currently not implemented in backend, but prepared for future
   static async updateCocktail(cocktailId, payload) {
     try {
       const response = await API.put(`/cocktails/${cocktailId}`, payload);
@@ -43,8 +34,6 @@ class CocktailApi {
     }
   }
 
-  // ➕ **POST: Create new cocktail**
-  // Note: Currently not implemented in backend, but prepared for future
   static async createCocktail(payload) {
     try {
       const response = await API.post("/cocktails", payload);
@@ -56,8 +45,6 @@ class CocktailApi {
     }
   }
 
-  // ❌ **DELETE: Remove cocktail**
-  // Note: Currently not implemented in backend, but prepared for future
   static async deleteCocktail(cocktailId) {
     try {
       const response = await API.delete(`/cocktails/${cocktailId}`);
@@ -69,8 +56,6 @@ class CocktailApi {
     }
   }
 
-  // 🔍 **GET: Search cocktails by query**
-  // Used in: CocktailList component search functionality
   static async searchCocktails(query) {
     try {
       const response = await API.get(
@@ -84,8 +69,6 @@ class CocktailApi {
     }
   }
 
-  // 🎲 **GET: Get random cocktail(s)**
-  // Used in: CocktailList "Surprise Me" feature
   static async getRandomCocktails(count = 5) {
     try {
       const response = await API.get(`/random?count=${count}`);
@@ -97,8 +80,6 @@ class CocktailApi {
     }
   }
 
-  // 🍃 **GET: Get available cocktails by ingredients**
-  // Used in: AvailableCocktails page
   static async getAvailableCocktails(ingredients) {
     try {
       const ingredientString = Array.isArray(ingredients)
@@ -116,8 +97,6 @@ class CocktailApi {
     }
   }
 
-  // ❤️ **POST: Add cocktail to favorites**
-  // Used in: CocktailList, AvailableCocktails components
   static async addToFavorites(cocktailId) {
     try {
       const response = await API.post("/favorites/", {
@@ -131,8 +110,6 @@ class CocktailApi {
     }
   }
 
-  // 💔 **DELETE: Remove cocktail from favorites**
-  // Used in: CocktailList, Favorites page
   static async removeFromFavorites(cocktailId) {
     try {
       const response = await API.delete(`/favorites/${cocktailId}`);
@@ -144,8 +121,6 @@ class CocktailApi {
     }
   }
 
-  // 📋 **GET: Get user's favorite cocktails**
-  // Used in: Favorites page, Navbar favorites count
   static async getFavoriteCocktails() {
     try {
       const response = await API.get("/favorites/");

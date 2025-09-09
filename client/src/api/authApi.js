@@ -1,10 +1,10 @@
 import API from "./config";
 
-// 🔐 **AUTHENTICATION SERVICE - Login/Logout/Password Management**
+// **Authentication Service - Login/Logout/Password Management**
 // This handles all authentication-related API calls
 
 class AuthApi {
-  // 🚪 **POST: User login**
+  // **POST: User login**
   // Used in: Login page, useAuth hook
   static async login(loginParams) {
     try {
@@ -24,7 +24,7 @@ class AuthApi {
     }
   }
 
-  // 🚪 **POST: User logout**
+  // **POST: User logout**
   // Note: Currently handled client-side, but prepared for server-side logout
   static async logout() {
     try {
@@ -42,7 +42,7 @@ class AuthApi {
     }
   }
 
-  // 📧 **POST: Reset password request**
+  // **POST: Reset password request**
   // Note: Currently not implemented in backend, but prepared for future
   static async resetPassword(email) {
     try {
@@ -55,7 +55,7 @@ class AuthApi {
     }
   }
 
-  // 🔑 **POST: Set new password**
+  // **POST: Set new password**
   // Note: Currently not implemented in backend, but prepared for future
   static async setPassword(token, newPassword) {
     try {
@@ -71,7 +71,7 @@ class AuthApi {
     }
   }
 
-  // ✅ **GET: Verify token validity**
+  // **GET: Verify token validity**
   // Used to check if user is still authenticated
   static async verifyToken() {
     try {
@@ -84,7 +84,7 @@ class AuthApi {
     }
   }
 
-  // 🔄 **POST: Refresh access token**
+  // **POST: Refresh access token**
   // Note: Currently not implemented, but prepared for future JWT refresh
   static async refreshToken(refreshToken) {
     try {

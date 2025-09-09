@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
+import { Link, useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -7,11 +7,11 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
-    <nav className="bg-pink-600 text-white px-4 py-3 shadow flex justify-between items-center">
+    <nav className="text-white px-4 py-3 shadow flex justify-between items-center">
       <Link to="/" className="text-2xl font-bold">
         🍸 Ginny
       </Link>

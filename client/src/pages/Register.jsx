@@ -21,7 +21,6 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // ✅ Use UserApi instead of direct axios
       await UserApi.createUser(formData);
       navigate("/login");
     } catch (err) {
@@ -68,7 +67,7 @@ const Register = () => {
         <button
           type="submit"
           disabled={loading}
-          className="bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
+          className="bg-green-600 py-2 rounded hover:bg-green-700 disabled:opacity-50"
         >
           {loading ? "Creating Account..." : "Register"}
         </button>

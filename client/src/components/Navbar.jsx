@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import ThemeToggle from "./ThemeToggle";
 
 const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -11,7 +12,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="text-white px-4 py-3 shadow flex justify-between items-center">
+    <nav className="px-4 py-3 shadow flex justify-between items-center">
       <Link to="/" className="text-2xl font-bold">
         🍸 Ginny
       </Link>
@@ -19,6 +20,7 @@ const Navbar = () => {
         <Link to="/available">What Can I Make?</Link>
         <Link to="/recipes">Recipes</Link>
         <Link to="/favorites">Favorites</Link>
+
         {!isAuthenticated ? (
           <>
             <Link to="/login">Login</Link>
@@ -29,6 +31,8 @@ const Navbar = () => {
             Logout
           </button>
         )}
+
+        <ThemeToggle />
       </div>
     </nav>
   );

@@ -12,11 +12,12 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="px-4 py-3 shadow flex justify-between items-center">
+    <nav className="fixed top-0 left-0 right-0 z-50 px-8 py-4 flex justify-between items-center">
       <Link to="/" className="text-2xl font-bold">
-        🍸 Ginny
+        Ginny 🍸
       </Link>
-      <div className="flex gap-4 items-center">
+
+      <div className="flex gap-4 items-center justify-center">
         <Link to="/available">What Can I Make?</Link>
         <Link to="/recipes">Recipes</Link>
         <Link to="/favorites">Favorites</Link>

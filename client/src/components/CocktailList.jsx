@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchCocktails, searchCocktails, getRandomCocktail } from "../api";
+import { CocktailApi } from "../api";
+import useFavorites from "../hooks/useFavorites";
 
 const CocktailList = () => {
   const [cocktails, setCocktails] = useState([]);
@@ -9,29 +10,17 @@ const CocktailList = () => {
   const [showLoader, setShowLoader] = useState(false);
   const [randomCocktail, setRandomCocktail] = useState(null);
 
-  // ✅ Favorites state from localStorage
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem("favorites");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const toggleFavorite = (id) => {
-    const updated = favorites.includes(id)
-      ? favorites.filter((fid) => fid !== id)
-      : [...favorites, id];
-    setFavorites(updated);
-    localStorage.setItem("favorites", JSON.stringify(updated));
-  };
+  const { toggleFavorite, isFavorite } = useFavorites();
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
       setLoading(true);
       const fetchData = async () => {
         try {
-          const res = query.trim()
-            ? await searchCocktails(query)
-            : await fetchCocktails();
-          setCocktails(res.data);
+          const data = query.trim()
+            ? await CocktailApi.searchCocktails(query)
+            : await CocktailApi.getCocktails();
+          setCocktails(data);
         } catch (err) {
           console.error("Search error:", err);
         } finally {
@@ -57,8 +46,8 @@ const CocktailList = () => {
 
   const handleSurprise = async () => {
     try {
-      const res = await getRandomCocktail();
-      setRandomCocktail(res.data);
+      const data = await CocktailApi.getRandomCocktails(5);
+      setRandomCocktail(data[0]);
     } catch (err) {
       console.error("Failed to fetch random cocktail", err);
     }
@@ -112,15 +101,14 @@ const CocktailList = () => {
               <h3 className="text-lg font-bold mt-4">{cocktail.strDrink}</h3>
               <p className="text-sm text-gray-600">{cocktail.strCategory}</p>
 
-              {/* ❤️ Favorite Icon */}
               <button
                 onClick={(e) => {
-                  e.preventDefault(); // prevent navigating
+                  e.preventDefault();
                   toggleFavorite(cocktail.id);
                 }}
                 className="absolute top-2 right-2 text-xl"
               >
-                {favorites.includes(cocktail.id) ? "❤️" : "🤍"}
+                {isFavorite(cocktail.id) ? "❤️" : "🤍"}
               </button>
             </div>
           </Link>

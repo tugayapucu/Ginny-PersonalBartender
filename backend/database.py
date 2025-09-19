@@ -1,3 +1,4 @@
+import sqlite3
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -9,10 +10,19 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# This is the correct DB dependency for FastAPI
+# SQLAlchemy dependency for FastAPI (for auth and favorites)
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+# Raw SQLite connection dependency for cocktails
+def get_sqlite_db():
+    conn = sqlite3.connect("cocktails.db")
+    conn.row_factory = sqlite3.Row  # Makes rows behave like dictionaries
+    try:
+        yield conn
+    finally:
+        conn.close()

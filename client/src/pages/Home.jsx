@@ -19,26 +19,22 @@ const Home = () => {
           ></video>
         </div>
 
-        <div className="z-10 flex flex-col items-center text-center text-white relative">
-          <h1>Welcome to Personal Bartender</h1>
-          {/* <p className="text-xl max-w-3xl">
-            Explore, share, and discover amazing cocktail recipes made by
-            bartenders like you.
-          </p> */}
+        <div className="z-10 flex flex-col items-center text-center relative">
+          <h1 className="text-white">Welcome to Personal Bartender</h1>
           <div className="flex flex-wrap justify-center gap-4 mt-8">
-            <Link to="/recipes" className="btn-primary">
+            <Link to="/recipes" className="btn-primary border-white text-white">
               Search Recipes
             </Link>
-            <Link to="/add" className="btn-primary">
+            <Link to="/add" className="btn-primary border-white text-white">
               Cocktail of the Day
             </Link>
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-white">
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
           <div className="flex flex-col items-center">
-            <p>Scroll down to explore</p>
-            <div className="text-3xl mb-2">↓</div>
+            <p className="text-white">Scroll down to explore</p>
+            <div className="text-3xl mb-2 text-white">↓</div>
           </div>
         </div>
       </section>

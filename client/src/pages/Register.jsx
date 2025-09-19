@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { UserApi } from "../api";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -9,8 +9,8 @@ const Register = () => {
     email: "",
     password: "",
   });
-
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,11 +18,15 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
+
     try {
-      await axios.post("http://127.0.0.1:8000/auth/register", formData);
+      await UserApi.createUser(formData);
       navigate("/login");
     } catch (err) {
-      setError(err.response?.data?.detail || "Registration failed");
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -37,6 +41,7 @@ const Register = () => {
           value={formData.username}
           onChange={handleChange}
           required
+          disabled={loading}
           className="border rounded px-4 py-2"
         />
         <input
@@ -46,6 +51,7 @@ const Register = () => {
           value={formData.email}
           onChange={handleChange}
           required
+          disabled={loading}
           className="border rounded px-4 py-2"
         />
         <input
@@ -55,13 +61,15 @@ const Register = () => {
           value={formData.password}
           onChange={handleChange}
           required
+          disabled={loading}
           className="border rounded px-4 py-2"
         />
         <button
           type="submit"
-          className="bg-green-600 text-white py-2 rounded hover:bg-green-700"
+          disabled={loading}
+          className="bg-green-600 py-2 rounded hover:bg-green-700 disabled:opacity-50"
         >
-          Register
+          {loading ? "Creating Account..." : "Register"}
         </button>
         {error && <p className="text-red-500 text-sm">{error}</p>}
       </form>

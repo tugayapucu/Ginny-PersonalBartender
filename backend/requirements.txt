@@ -6,3 +6,5 @@ sqlalchemy
 passlib
 python-jose
 pydantic[email]
+python-dotenv
+psycopg2-binary

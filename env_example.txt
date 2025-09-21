@@ -1,0 +1,20 @@
+# Database Configuration
+POSTGRES_DB=ginny_cocktails
+POSTGRES_USER=ginny_dev
+POSTGRES_PASSWORD=dev_secret_123
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+
+# Application Configuration
+DATABASE_URL=postgresql://ginny_dev:dev_secret_123@localhost:5432/ginny_cocktails
+SECRET_KEY=your-super-secret-jwt-key-for-development
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+CORS_ORIGINS=http://localhost:5173
+
+# Environment
+ENVIRONMENT=dev

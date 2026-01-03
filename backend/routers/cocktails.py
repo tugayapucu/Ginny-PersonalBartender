@@ -1,59 +1,57 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from typing import List
 from models import Cocktail
 import random
 from database import get_db
-from fastapi import Query
-from fastapi import Request
 
 router = APIRouter()
 
+
 @router.get("/cocktails", response_model=List[Cocktail])
-def get_cocktails():
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # ✅ Select all fields now that model is extended
-    rows = cursor.execute("SELECT * FROM drinks LIMIT 50").fetchall()
-    conn.close()
-
+def get_cocktails(db: Session = Depends(get_db)):
+    rows = db.execute(text("SELECT * FROM drinks LIMIT 50")).mappings().all()
     return [dict(row) for row in rows]
 
+
 @router.get("/cocktails/{id}", response_model=Cocktail)
-def get_cocktail_by_id(id: int):
-    conn = get_db()
-    row = conn.execute("SELECT * FROM drinks WHERE id = ?", (id,)).fetchone()
-    conn.close()
+def get_cocktail_by_id(id: int, db: Session = Depends(get_db)):
+    row = db.execute(
+        text("SELECT * FROM drinks WHERE id = :id"),
+        {"id": id},
+    ).mappings().first()
     if row is None:
         return {"error": "Cocktail not found"}
     return dict(row)
 
+
 @router.get("/search", response_model=List[Cocktail])
-def search_cocktails(query: str = Query(..., min_length=1)):
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # Check name match
+def search_cocktails(query: str = Query(..., min_length=1), db: Session = Depends(get_db)):
     query_like = f"%{query}%"
-    name_matches = cursor.execute("""
-        SELECT id, strDrink, strCategory, strAlcoholic, strGlass, strDrinkThumb
-        FROM drinks
-        WHERE strDrink LIKE ?
-    """, (query_like,)).fetchall()
+    name_matches = db.execute(
+        text(
+            "SELECT id, strDrink, strCategory, strAlcoholic, strGlass, strDrinkThumb "
+            "FROM drinks "
+            "WHERE strDrink LIKE :query"
+        ),
+        {"query": query_like},
+    ).mappings().all()
 
-    # Check ingredient matches
-    ingredient_matches = cursor.execute(f"""
-        SELECT id, strDrink, strCategory, strAlcoholic, strGlass, strDrinkThumb
-        FROM drinks
-        WHERE {" OR ".join([f"strIngredient{i} LIKE ?" for i in range(1, 16)])}
-    """, tuple([query_like] * 15)).fetchall()
+    ingredient_conditions = " OR ".join(
+        [f"strIngredient{i} LIKE :ing{i}" for i in range(1, 16)]
+    )
+    ingredient_params = {f"ing{i}": query_like for i in range(1, 16)}
+    ingredient_matches = db.execute(
+        text(
+            "SELECT id, strDrink, strCategory, strAlcoholic, strGlass, strDrinkThumb "
+            f"FROM drinks WHERE {ingredient_conditions}"
+        ),
+        ingredient_params,
+    ).mappings().all()
 
-    conn.close()
-
-    # Combine and deduplicate by cocktail ID
     seen_ids = set()
     all_results = []
-
     for row in name_matches + ingredient_matches:
         if row["id"] not in seen_ids:
             seen_ids.add(row["id"])
@@ -61,15 +59,14 @@ def search_cocktails(query: str = Query(..., min_length=1)):
 
     return all_results
 
+
 @router.get("/available", response_model=List[Cocktail])
-def get_available_cocktails(has: str = Query(..., description="Comma-separated list of ingredients")):
+def get_available_cocktails(
+    has: str = Query(..., description="Comma-separated list of ingredients"),
+    db: Session = Depends(get_db),
+):
     user_ingredients = [i.strip().lower() for i in has.split(",")]
-
-    conn = get_db()
-    cursor = conn.cursor()
-
-    rows = cursor.execute("SELECT * FROM drinks").fetchall()
-    conn.close()
+    rows = db.execute(text("SELECT * FROM drinks")).mappings().all()
 
     results = []
     for row in rows:
@@ -84,26 +81,18 @@ def get_available_cocktails(has: str = Query(..., description="Comma-separated l
 
     return results
 
-import random
 
 @router.get("/random", response_model=Cocktail)
-def get_random_cocktail():
-    conn = get_db()
-    cursor = conn.cursor()
-
-    # Get total number of drinks
-    count = cursor.execute("SELECT COUNT(*) FROM drinks").fetchone()[0]
-
-    # Pick a random offset
+def get_random_cocktail(db: Session = Depends(get_db)):
+    count = db.execute(text("SELECT COUNT(*) FROM drinks")).scalar()
     random_offset = random.randint(0, count - 1)
-
-    # Get 1 random drink
-    row = cursor.execute("""
-        SELECT id, strDrink, strCategory, strAlcoholic, strGlass, strDrinkThumb
-        FROM drinks
-        LIMIT 1 OFFSET ?
-    """, (random_offset,)).fetchone()
-
-    conn.close()
+    row = db.execute(
+        text(
+            "SELECT id, strDrink, strCategory, strAlcoholic, strGlass, strDrinkThumb "
+            "FROM drinks "
+            "LIMIT 1 OFFSET :offset"
+        ),
+        {"offset": random_offset},
+    ).mappings().first()
 
     return dict(row)

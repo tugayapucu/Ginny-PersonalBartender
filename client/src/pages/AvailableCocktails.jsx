@@ -86,10 +86,10 @@ function AvailableCocktails() {
         {cocktails.length > 0 ? (
           cocktails.map((c) => (
             <div key={c.id} className="cocktail-card">
-              <img src={c.strDrinkThumb} alt={c.strDrink} />
-              <h3>{c.strDrink}</h3>
-              <p>{c.strCategory} | {c.strAlcoholic}</p>
-              <p><strong>Glass:</strong> {c.strGlass}</p>
+              <img src={c.thumb_url} alt={c.name} />
+              <h3>{c.name}</h3>
+              <p>{c.category} | {c.alcoholic}</p>
+              <p><strong>Glass:</strong> {c.glass}</p>
 
               {/* ✅ Favorite button */}
               <button

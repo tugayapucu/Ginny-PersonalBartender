@@ -44,11 +44,11 @@ const Favorites = () => {
             <div key={cocktail.id} className="border rounded-xl shadow p-4 text-center relative">
               <Link to={`/cocktails/${cocktail.id}`}>
                 <img
-                  src={cocktail.strDrinkThumb}
-                  alt={cocktail.strDrink}
+                  src={cocktail.thumb_url}
+                  alt={cocktail.name}
                   className="w-full h-48 object-cover rounded"
                 />
-                <h3 className="text-lg font-bold mt-2">{cocktail.strDrink}</h3>
+                <h3 className="text-lg font-bold mt-2">{cocktail.name}</h3>
               </Link>
               <button
                 onClick={() => removeFavorite(cocktail.id)}

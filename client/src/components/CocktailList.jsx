@@ -85,15 +85,15 @@ const CocktailList = () => {
       {randomCocktail && (
         <div className="mb-10 p-4 border rounded-lg shadow text-center bg-yellow-100">
           <h2 className="text-xl font-bold mb-2">
-            🎉 You got: {randomCocktail.strDrink}
+            🎉 You got: {randomCocktail.name}
           </h2>
           <img
-            src={randomCocktail.strDrinkThumb}
-            alt={randomCocktail.strDrink}
+            src={randomCocktail.thumb_url}
+            alt={randomCocktail.name}
             className="w-full max-w-xs mx-auto rounded"
           />
           <p className="mt-2 text-sm text-gray-600">
-            {randomCocktail.strCategory} — {randomCocktail.strGlass}
+            {randomCocktail.category} — {randomCocktail.glass}
           </p>
         </div>
       )}
@@ -105,12 +105,12 @@ const CocktailList = () => {
           <Link to={`/cocktails/${cocktail.id}`} key={cocktail.id}>
             <div className="border rounded-xl shadow p-4 text-center hover:scale-105 transition cursor-pointer relative">
               <img
-                src={cocktail.strDrinkThumb}
-                alt={cocktail.strDrink}
+                src={cocktail.thumb_url}
+                alt={cocktail.name}
                 className="w-full h-48 object-cover rounded"
               />
-              <h3 className="text-lg font-bold mt-4">{cocktail.strDrink}</h3>
-              <p className="text-sm text-gray-600">{cocktail.strCategory}</p>
+              <h3 className="text-lg font-bold mt-4">{cocktail.name}</h3>
+              <p className="text-sm text-gray-600">{cocktail.category}</p>
 
               {/* ❤️ Favorite Icon */}
               <button

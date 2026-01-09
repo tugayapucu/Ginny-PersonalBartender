@@ -3,9 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import cocktails
 from auth.routes import router as auth_router
 from routers import favorites
+from database import Base, engine
+import models  # Ensure SQLAlchemy models are registered.
 
 
 app = FastAPI(title="Ginny Personal Bartender API")
+
+
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,

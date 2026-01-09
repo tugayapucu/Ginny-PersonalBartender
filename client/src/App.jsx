@@ -11,6 +11,7 @@ import "./App.css";
 import Register from "./pages/Register";
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
+import CocktailOfTheDay from "./pages/CocktailOfTheDay";
 
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
         <Route path="/cocktails/:id" element={<CocktailDetail />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/cocktail-of-the-day" element={<CocktailOfTheDay />} />
         <Route
           path="/available"
           element={

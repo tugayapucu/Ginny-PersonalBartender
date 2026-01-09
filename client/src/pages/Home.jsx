@@ -29,7 +29,7 @@ const Home = () => {
             <Link to="/recipes" className="btn-primary">
               Search Recipes
             </Link>
-            <Link to="/add" className="btn-primary">
+            <Link to="/cocktail-of-the-day" className="btn-primary">
               Cocktail of the Day
             </Link>
           </div>

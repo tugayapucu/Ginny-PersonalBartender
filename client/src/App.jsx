@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import CocktailOfTheDay from "./pages/CocktailOfTheDay";
+import { AuthProvider } from "./hooks/useAuth";
 
 
 function App() {
@@ -22,7 +23,8 @@ function App() {
   }, [darkMode]);
 
   return (
-    <Router>
+    <AuthProvider>
+      <Router>
       <Navbar />
       <div className="text-center my-4">
         <button onClick={() => setDarkMode(!darkMode)} style={{
@@ -61,7 +63,8 @@ function App() {
         />
       </Routes>
       <Footer />
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 

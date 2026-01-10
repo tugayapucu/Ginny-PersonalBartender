@@ -4,9 +4,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User
-
-SECRET_KEY = "your-secret-key"  # use same as in your token creation
-ALGORITHM = "HS256"
+from security import SECRET_KEY, ALGORITHM
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -22,10 +20,16 @@ def get_current_user(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int = payload.get("sub")
+        user_id = payload.get("sub")
         if user_id is None:
             raise credentials_exception
+        if not isinstance(user_id, int):
+            user_id = int(user_id)
+        if user_id <= 0:
+            raise credentials_exception
     except JWTError:
+        raise credentials_exception
+    except (TypeError, ValueError):
         raise credentials_exception
 
     user = db.query(User).filter(User.id == user_id).first()

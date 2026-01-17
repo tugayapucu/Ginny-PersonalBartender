@@ -1,9 +1,31 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { getRandomCocktail } from "../api";
 import video from "../assets/videos/cocktail-video-3.mp4";
 import howItWorksImg from "../assets/images/cocktail-img-1.jpg";
 
 const Home = () => {
+  const [cocktail, setCocktail] = useState(null);
+
+  useEffect(() => {
+    const loadCocktail = async () => {
+      try {
+        const randomRes = await getRandomCocktail();
+        const random = randomRes.data;
+        if (random?.id) {
+          const detailRes = await axios.get(
+            `http://127.0.0.1:8000/cocktails/${random.id}`
+          );
+          setCocktail(detailRes.data);
+        }
+      } catch (err) {
+        console.error("Failed to load cocktail of the day", err);
+      }
+    };
+    loadCocktail();
+  }, []);
+
   return (
     <div className="overflow-hidden">
       {/* Hero Section */}
@@ -20,11 +42,12 @@ const Home = () => {
         </div>
 
         <div className="z-10 flex flex-col items-center text-center text-white relative">
-          <h1>Welcome to Personal Bartender</h1>
-          {/* <p className="text-xl max-w-3xl">
-            Explore, share, and discover amazing cocktail recipes made by
-            bartenders like you.
-          </p> */}
+          <h1>Ginny</h1>
+          <h2>Your Favourite Personal Bartender</h2>
+          <p>
+            A cocktail information and recommendation system. Share and save
+            your favourite cocktails.
+          </p>
           <div className="flex flex-wrap justify-center gap-4 mt-8">
             <Link to="/recipes" className="btn-primary">
               Search Recipes
@@ -70,6 +93,49 @@ const Home = () => {
                 <li>Get personalized recommendations</li>
                 <li>Make amazing cocktails at home</li>
               </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Cocktail of the day */}
+      <section className="bg-slate-50">
+        <div className="section-pattern"></div>
+        <div className="z-10 w-full max-w-7xl">
+          <div className="flex flex-col md:flex-row items-center justify-between w-full gap-12">
+            <div className="md:w-1/2">
+              <div className="aspect-[3/4] max-w-[500px] overflow-hidden rounded-2xl">
+                <img
+                  src={cocktail?.thumb_url || howItWorksImg}
+                  alt={cocktail?.name || "Cocktail of the Day"}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            <div className="md:w-1/2 glass-card">
+              <h2 className="mb-8">Cocktail of the Day</h2>
+              {cocktail ? (
+                <>
+                  <p className="text-2xl font-semibold text-left mb-6">
+                    {cocktail.name}
+                  </p>
+                  <h4 className="text-left font-bold mb-3">Ingredients</h4>
+                  <ul className="text-lg text-left list-disc pl-5 space-y-2 mb-8">
+                    {cocktail.ingredients?.slice(0, 6).map((item, idx) => (
+                      <li key={idx}>
+                        {[item.measure, item.ingredient]
+                          .filter(Boolean)
+                          .join(" ")}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/cocktail-of-the-day" className="btn-primary">
+                    See More
+                  </Link>
+                </>
+              ) : (
+                <p className="text-left">Loading today's cocktail...</p>
+              )}
             </div>
           </div>
         </div>

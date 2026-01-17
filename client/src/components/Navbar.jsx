@@ -1,5 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
+import { Link, useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 const Navbar = () => {
   const { isAuthenticated, logout } = useAuth();
@@ -7,7 +7,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -25,9 +25,12 @@ const Navbar = () => {
             <Link to="/register">Register</Link>
           </>
         ) : (
-          <button onClick={handleLogout} className="hover:underline">
-            Logout
-          </button>
+          <>
+            <Link to="/settings">Settings</Link>
+            <button onClick={handleLogout} className="hover:underline">
+              Logout
+            </button>
+          </>
         )}
       </div>
     </nav>

@@ -102,6 +102,7 @@ def get_available_cocktails(
     placeholders = ", ".join([f":ing{i}" for i in range(len(ingredient_keys))])
     params = {f"ing{i}": ing for i, ing in enumerate(ingredient_keys)}
 
+    params["ingredient_count"] = len(ingredient_keys)
     rows = db.execute(
         text(
             "SELECT d.id, d.name, d.category, d.alcoholic, d.glass, d.thumb_url "
@@ -109,7 +110,7 @@ def get_available_cocktails(
             "JOIN drink_ingredients di ON di.drink_id = d.id "
             "JOIN ingredients i ON i.id = di.ingredient_id "
             "GROUP BY d.id "
-            "HAVING SUM(CASE WHEN i.name_key IN (" + placeholders + ") THEN 1 ELSE 0 END) = COUNT(*)"
+            "HAVING COUNT(DISTINCT CASE WHEN i.name_key IN (" + placeholders + ") THEN i.name_key END) = :ingredient_count"
         ),
         params,
     ).mappings().all()

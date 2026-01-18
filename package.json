@@ -1,0 +1,12 @@
+{
+  "name": "personalbartender",
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"python -m uvicorn main:app --reload --app-dir backend\" \"npm --prefix client run dev\"",
+    "dev:backend": "python -m uvicorn main:app --reload --app-dir backend",
+    "dev:client": "npm --prefix client run dev"
+  }
+}

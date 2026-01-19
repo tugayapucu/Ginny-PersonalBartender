@@ -3,12 +3,17 @@ from sqlalchemy.orm import Session
 from database import get_db
 import models
 import schemas
-from security import hash_password, verify_password, create_access_token
+from security import hash_password, verify_password, create_access_token, validate_password_strength
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register")
 def register(data: schemas.RegisterRequest, db: Session = Depends(get_db)):
+    try:
+        validate_password_strength(data.password)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     if db.query(models.User).filter(models.User.email == data.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
     

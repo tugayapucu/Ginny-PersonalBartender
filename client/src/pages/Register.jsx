@@ -11,9 +11,11 @@ const Register = () => {
   });
 
   const [error, setError] = useState("");
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const passwordRule =
     "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.";
   const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+  const isPasswordValid = passwordPattern.test(formData.password);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -61,10 +63,15 @@ const Register = () => {
           placeholder="Password"
           value={formData.password}
           onChange={handleChange}
+          onBlur={() => setPasswordTouched(true)}
           required
           className="border rounded px-4 py-2"
         />
-        <p className="text-xs text-gray-600">{passwordRule}</p>
+        {(passwordTouched || formData.password.length > 0) && (
+          <p className={`text-xs ${isPasswordValid ? "text-green-600" : "text-red-500"}`}>
+            {isPasswordValid ? "Strong password" : passwordRule}
+          </p>
+        )}
         <button
           type="submit"
           className="bg-green-600 text-white py-2 rounded hover:bg-green-700"

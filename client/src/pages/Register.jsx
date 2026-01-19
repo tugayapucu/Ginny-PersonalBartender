@@ -11,6 +11,9 @@ const Register = () => {
   });
 
   const [error, setError] = useState("");
+  const passwordRule =
+    "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.";
+  const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,6 +21,10 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!passwordPattern.test(formData.password)) {
+      setError(passwordRule);
+      return;
+    }
     try {
       await axios.post("http://127.0.0.1:8000/auth/register", formData);
       navigate("/login");
@@ -57,6 +64,7 @@ const Register = () => {
           required
           className="border rounded px-4 py-2"
         />
+        <p className="text-xs text-gray-600">{passwordRule}</p>
         <button
           type="submit"
           className="bg-green-600 text-white py-2 rounded hover:bg-green-700"

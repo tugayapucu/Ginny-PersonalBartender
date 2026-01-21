@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 class RegisterRequest(BaseModel):
     username: str
@@ -11,3 +12,12 @@ class LoginRequest(BaseModel):
 
 class FavoriteCreate(BaseModel):
     cocktail_id: str
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None

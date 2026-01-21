@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import useAuth from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,27 @@ const Settings = () => {
   );
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  const authHeaders = token
+    ? { headers: { Authorization: `Bearer ${token}` } }
+    : undefined;
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!token) {
+        return;
+      }
+      try {
+        const res = await axios.get("http://127.0.0.1:8000/users/me", authHeaders);
+        setUsername(res.data.username || "");
+        setEmail(res.data.email || "");
+      } catch (err) {
+        setError(err.response?.data?.detail || "Failed to load profile");
+      }
+    };
+
+    loadProfile();
+  }, [token]);
 
   const handleThemeChange = (newTheme) => {
     setTheme(newTheme);
@@ -37,7 +58,29 @@ const Settings = () => {
     e.preventDefault();
     setMessage("");
     setError("");
-    setMessage("Profile update not yet implemented on backend");
+    const payload = {};
+    if (username.trim()) {
+      payload.username = username.trim();
+    }
+    if (email.trim()) {
+      payload.email = email.trim();
+    }
+    if (Object.keys(payload).length === 0) {
+      setError("Provide a username or email to update");
+      return;
+    }
+    try {
+      const res = await axios.patch(
+        "http://127.0.0.1:8000/users/me",
+        payload,
+        authHeaders
+      );
+      setUsername(res.data.username || "");
+      setEmail(res.data.email || "");
+      setMessage("Profile updated");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Profile update failed");
+    }
   };
 
   const handlePasswordChange = async (e) => {

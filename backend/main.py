@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import cocktails
+from routers import users
 from auth.routes import router as auth_router
 from routers import favorites
 from database import Base, engine
@@ -26,3 +27,4 @@ app.add_middleware(
 app.include_router(cocktails.router)
 app.include_router(auth_router)
 app.include_router(favorites.router)
+app.include_router(users.router)

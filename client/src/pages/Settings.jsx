@@ -16,6 +16,9 @@ const Settings = () => {
   );
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const passwordRule =
+    "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.";
+  const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
   const authHeaders = token
     ? { headers: { Authorization: `Bearer ${token}` } }
@@ -87,7 +90,26 @@ const Settings = () => {
     e.preventDefault();
     setMessage("");
     setError("");
-    setMessage("Password change not yet implemented on backend");
+    if (!currentPassword || !newPassword) {
+      setError("Both current and new password are required");
+      return;
+    }
+    if (!passwordPattern.test(newPassword)) {
+      setError(passwordRule);
+      return;
+    }
+    try {
+      await axios.post(
+        "http://127.0.0.1:8000/users/me/password",
+        { current_password: currentPassword, new_password: newPassword },
+        authHeaders
+      );
+      setCurrentPassword("");
+      setNewPassword("");
+      setMessage("Password updated");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Password update failed");
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -180,6 +202,7 @@ const Settings = () => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />
+              <p className="text-xs text-gray-600 mt-1">{passwordRule}</p>
             </div>
             <button
               type="submit"

@@ -21,3 +21,7 @@ class UserResponse(BaseModel):
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str

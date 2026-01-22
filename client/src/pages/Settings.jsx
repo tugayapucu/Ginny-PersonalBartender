@@ -33,6 +33,9 @@ const Settings = () => {
         const res = await axios.get("http://127.0.0.1:8000/users/me", authHeaders);
         setUsername(res.data.username || "");
         setEmail(res.data.email || "");
+        if (res.data.theme) {
+          handleThemeChange(res.data.theme, false);
+        }
       } catch (err) {
         setError(err.response?.data?.detail || "Failed to load profile");
       }
@@ -41,7 +44,7 @@ const Settings = () => {
     loadProfile();
   }, [token]);
 
-  const handleThemeChange = (newTheme) => {
+  const handleThemeChange = async (newTheme, persist = true) => {
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
 
@@ -54,6 +57,18 @@ const Settings = () => {
         "(prefers-color-scheme: dark)"
       ).matches;
       document.body.classList.toggle("dark-mode", prefersDark);
+    }
+
+    if (persist && token) {
+      try {
+        await axios.patch(
+          "http://127.0.0.1:8000/users/me/preferences",
+          { theme: newTheme },
+          authHeaders
+        );
+      } catch (err) {
+        setError(err.response?.data?.detail || "Failed to save theme");
+      }
     }
   };
 

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from routers import cocktails
 from routers import users
 from auth.routes import router as auth_router
@@ -14,6 +15,19 @@ app = FastAPI(title="Ginny Personal Bartender API")
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    ensure_user_columns()
+
+
+def ensure_user_columns():
+    with engine.begin() as conn:
+        columns = {
+            row["name"]
+            for row in conn.execute(text("PRAGMA table_info(users)")).mappings().all()
+        }
+        if not columns:
+            return
+        if "theme" not in columns:
+            conn.execute(text("ALTER TABLE users ADD COLUMN theme TEXT"))
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, Literal
 
 class RegisterRequest(BaseModel):
     username: str
@@ -17,6 +17,7 @@ class UserResponse(BaseModel):
     id: int
     username: str
     email: EmailStr
+    theme: Optional[str] = None
 
 class UserUpdate(BaseModel):
     username: Optional[str] = None
@@ -25,3 +26,6 @@ class UserUpdate(BaseModel):
 class PasswordChangeRequest(BaseModel):
     current_password: str
     new_password: str
+
+class UserPreferencesUpdate(BaseModel):
+    theme: Literal["light", "dark", "system"]

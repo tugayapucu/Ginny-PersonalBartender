@@ -14,6 +14,7 @@ def get_me(current_user: models.User = Depends(get_current_user)):
         "id": current_user.id,
         "username": current_user.username,
         "email": current_user.email,
+        "theme": current_user.theme,
     }
 
 
@@ -63,6 +64,24 @@ def update_me(
         "id": current_user.id,
         "username": current_user.username,
         "email": current_user.email,
+        "theme": current_user.theme,
+    }
+
+
+@router.patch("/me/preferences", response_model=schemas.UserResponse)
+def update_preferences(
+    payload: schemas.UserPreferencesUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    current_user.theme = payload.theme
+    db.commit()
+    db.refresh(current_user)
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "email": current_user.email,
+        "theme": current_user.theme,
     }
 
 

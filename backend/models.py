@@ -25,6 +25,7 @@ class User(Base):
     username = Column(String(100), unique=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
+    theme = Column(String(20), nullable=True)
 
 class Favorite(Base):
     __tablename__ = "favorites"

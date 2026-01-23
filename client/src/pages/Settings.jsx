@@ -137,7 +137,13 @@ const Settings = () => {
     }
     setMessage("");
     setError("");
-    setMessage("Account deletion not yet implemented on backend");
+    try {
+      await axios.delete("http://127.0.0.1:8000/users/me", authHeaders);
+      logout();
+      navigate("/register");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Account deletion failed");
+    }
   };
 
   const handleDisableAccount = async () => {

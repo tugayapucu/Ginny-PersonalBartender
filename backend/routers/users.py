@@ -101,3 +101,13 @@ def change_password(
     current_user.hashed_password = hash_password(payload.new_password)
     db.commit()
     return {"message": "Password updated"}
+
+
+@router.delete("/me")
+def delete_account(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    db.delete(current_user)
+    db.commit()
+    return {"message": "Account deleted"}

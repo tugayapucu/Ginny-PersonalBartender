@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -26,6 +26,7 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     theme = Column(String(20), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
 
 class Favorite(Base):
     __tablename__ = "favorites"

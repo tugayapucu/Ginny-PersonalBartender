@@ -152,7 +152,13 @@ const Settings = () => {
     }
     setMessage("");
     setError("");
-    setMessage("Account disable not yet implemented on backend");
+    try {
+      await axios.post("http://127.0.0.1:8000/users/me/disable", {}, authHeaders);
+      logout();
+      navigate("/login");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Account disable failed");
+    }
   };
 
   return (

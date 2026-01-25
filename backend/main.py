@@ -28,6 +28,10 @@ def ensure_user_columns():
             return
         if "theme" not in columns:
             conn.execute(text("ALTER TABLE users ADD COLUMN theme TEXT"))
+        if "is_active" not in columns:
+            conn.execute(
+                text("ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1")
+            )
 
 app.add_middleware(
     CORSMiddleware,

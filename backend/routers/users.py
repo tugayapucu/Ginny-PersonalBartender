@@ -15,6 +15,7 @@ def get_me(current_user: models.User = Depends(get_current_user)):
         "username": current_user.username,
         "email": current_user.email,
         "theme": current_user.theme,
+        "is_active": current_user.is_active,
     }
 
 
@@ -65,6 +66,7 @@ def update_me(
         "username": current_user.username,
         "email": current_user.email,
         "theme": current_user.theme,
+        "is_active": current_user.is_active,
     }
 
 
@@ -82,6 +84,7 @@ def update_preferences(
         "username": current_user.username,
         "email": current_user.email,
         "theme": current_user.theme,
+        "is_active": current_user.is_active,
     }
 
 
@@ -111,3 +114,13 @@ def delete_account(
     db.delete(current_user)
     db.commit()
     return {"message": "Account deleted"}
+
+
+@router.post("/me/disable")
+def disable_account(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    current_user.is_active = False
+    db.commit()
+    return {"message": "Account disabled"}

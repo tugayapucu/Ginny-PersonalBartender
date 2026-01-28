@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { fetchCocktails, searchCocktails, getRandomCocktail } from "../api";
+import useAuth from "../hooks/useAuth";
+import useFavorites from "../hooks/useFavorites";
 
 const CocktailList = () => {
   const [cocktails, setCocktails] = useState([]);
@@ -9,18 +11,21 @@ const CocktailList = () => {
   const [showLoader, setShowLoader] = useState(false);
   const [randomCocktail, setRandomCocktail] = useState(null);
 
-  // ✅ Favorites state from localStorage
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem("favorites");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const navigate = useNavigate();
+  const { token } = useAuth();
+  const { favorites, addFavorite, removeFavorite } = useFavorites(token);
 
   const toggleFavorite = (id) => {
-    const updated = favorites.includes(id)
-      ? favorites.filter((fid) => fid !== id)
-      : [...favorites, id];
-    setFavorites(updated);
-    localStorage.setItem("favorites", JSON.stringify(updated));
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    const isFav = favorites.map(String).includes(String(id));
+    if (isFav) {
+      removeFavorite(id);
+    } else {
+      addFavorite(id);
+    }
   };
 
   useEffect(() => {
@@ -120,7 +125,7 @@ const CocktailList = () => {
                 }}
                 className="absolute top-2 right-2 text-xl"
               >
-                {favorites.includes(cocktail.id) ? "❤️" : "🤍"}
+                {favorites.map(String).includes(String(cocktail.id)) ? "❤️" : "🤍"}
               </button>
             </div>
           </Link>

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import useAuth from '../hooks/useAuth'
+import useFavorites from '../hooks/useFavorites'
 import './AvailableCocktails.css';
 
 function AvailableCocktails() {
@@ -8,20 +10,16 @@ function AvailableCocktails() {
   const [cocktails, setCocktails] = useState([])
   const [loading, setLoading] = useState(false)
 
-  // ✅ Initialize favorites from localStorage
-  const [favorites, setFavorites] = useState(() => {
-    const savedFavorites = localStorage.getItem('favorites')
-    return savedFavorites ? JSON.parse(savedFavorites) : []
-  })
+  const { token } = useAuth()
+  const { favorites, addFavorite, removeFavorite } = useFavorites(token)
 
-  // ✅ Add or remove from favorites
   const toggleFavorite = (cocktailId) => {
-    const updatedFavorites = favorites.includes(cocktailId)
-      ? favorites.filter(id => id !== cocktailId)
-      : [...favorites, cocktailId]
-
-    setFavorites(updatedFavorites)
-    localStorage.setItem('favorites', JSON.stringify(updatedFavorites))
+    const isFav = favorites.map(String).includes(String(cocktailId))
+    if (isFav) {
+      removeFavorite(cocktailId)
+    } else {
+      addFavorite(cocktailId)
+    }
   }
 
   const handleAdd = () => {
@@ -95,9 +93,9 @@ function AvailableCocktails() {
               <button
                 className="fav-btn"
                 onClick={() => toggleFavorite(c.id)}
-                title={favorites.includes(c.id) ? 'Remove from favorites' : 'Add to favorites'}
+                title={favorites.map(String).includes(String(c.id)) ? 'Remove from favorites' : 'Add to favorites'}
               >
-                {favorites.includes(c.id) ? '❤️' : '🤍'}
+                {favorites.map(String).includes(String(c.id)) ? '❤️' : '🤍'}
               </button>
             </div>
           ))

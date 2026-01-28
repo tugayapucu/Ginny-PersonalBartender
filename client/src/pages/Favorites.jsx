@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+import useAuth from '../hooks/useAuth'
+import useFavorites from '../hooks/useFavorites'
 
 const Favorites = () => {
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favorites')
-    return saved ? JSON.parse(saved) : []
-  })
   const [cocktails, setCocktails] = useState([])
+  const { token } = useAuth()
+  const { favorites, removeFavorite } = useFavorites(token)
 
   useEffect(() => {
     const fetchFavs = async () => {
+      if (favorites.length === 0) {
+        setCocktails([])
+        return
+      }
       try {
         const cocktailPromises = favorites.map((id) =>
           axios.get(`http://127.0.0.1:8000/cocktails/${id}`)
@@ -23,15 +27,8 @@ const Favorites = () => {
       }
     }
 
-    if (favorites.length > 0) fetchFavs()
+    fetchFavs()
   }, [favorites])
-
-  const removeFavorite = (id) => {
-    const updated = favorites.filter((favId) => favId !== id)
-    setFavorites(updated)
-    localStorage.setItem('favorites', JSON.stringify(updated))
-    setCocktails(cocktails.filter((c) => c.id !== id))
-  }
 
   return (
     <div className="px-6 py-10 max-w-4xl mx-auto">

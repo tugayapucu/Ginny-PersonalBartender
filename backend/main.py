@@ -6,6 +6,7 @@ from routers import users
 from auth.routes import router as auth_router
 from routers import favorites
 from database import Base, engine
+from settings import CORS_ALLOWED_ORIGINS
 import models  # Ensure SQLAlchemy models are registered.
 
 
@@ -35,7 +36,7 @@ def ensure_user_columns():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=CORS_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

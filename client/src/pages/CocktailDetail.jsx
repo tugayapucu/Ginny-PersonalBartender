@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import { getCocktailById } from "../api";
 
 const CocktailDetail = () => {
   const { id } = useParams();
   const [cocktail, setCocktail] = useState(null);
 
   useEffect(() => {
-    axios
-      .get(`http://127.0.0.1:8000/cocktails/${id}`)
+    getCocktailById(id)
       .then((res) => setCocktail(res.data))
       .catch((err) => console.error("Failed to load cocktail", err));
   }, [id]);

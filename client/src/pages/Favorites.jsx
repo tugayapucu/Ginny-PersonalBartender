@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
 import useAuth from '../hooks/useAuth'
 import useFavorites from '../hooks/useFavorites'
+import { getCocktailById } from "../api";
 
 const Favorites = () => {
   const [cocktails, setCocktails] = useState([])
@@ -17,7 +17,7 @@ const Favorites = () => {
       }
       try {
         const cocktailPromises = favorites.map((id) =>
-          axios.get(`http://127.0.0.1:8000/cocktails/${id}`)
+          getCocktailById(id)
         )
         const responses = await Promise.all(cocktailPromises)
         const data = responses.map((res) => res.data)

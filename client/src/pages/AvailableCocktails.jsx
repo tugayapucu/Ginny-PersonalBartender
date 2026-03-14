@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import useAuth from '../hooks/useAuth'
 import useFavorites from '../hooks/useFavorites'
+import { getAvailableCocktails } from "../api";
 import './AvailableCocktails.css';
 
 function AvailableCocktails() {
   const [input, setInput] = useState('')
   const [ingredients, setIngredients] = useState([])
   const [cocktails, setCocktails] = useState([])
-  const [loading, setLoading] = useState(false)
 
   const { token } = useAuth()
   const { favorites, addFavorite, removeFavorite } = useFavorites(token)
@@ -36,14 +35,10 @@ function AvailableCocktails() {
 
   const fetchAvailableCocktails = async () => {
     try {
-      setLoading(true)
-      const query = ingredients.join(',')
-      const res = await axios.get(`http://127.0.0.1:8000/available?has=${query}`)
+      const res = await getAvailableCocktails(ingredients)
       setCocktails(res.data)
     } catch (err) {
       console.error('Fetch failed:', err)
-    } finally {
-      setLoading(false)
     }
   }
 

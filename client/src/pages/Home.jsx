@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
-import { getRandomCocktail } from "../api";
+import { getCocktailById, getRandomCocktail } from "../api";
 import video from "../assets/videos/cocktail-video-3.mp4";
 import howItWorksImg from "../assets/images/cocktail-img-1.jpg";
 
@@ -14,9 +13,7 @@ const Home = () => {
         const randomRes = await getRandomCocktail();
         const random = randomRes.data;
         if (random?.id) {
-          const detailRes = await axios.get(
-            `http://127.0.0.1:8000/cocktails/${random.id}`
-          );
+          const detailRes = await getCocktailById(random.id);
           setCocktail(detailRes.data);
         }
       } catch (err) {

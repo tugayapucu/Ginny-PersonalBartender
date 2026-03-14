@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { getRandomCocktail } from "../api";
+import { getCocktailById, getRandomCocktail } from "../api";
 
 const CocktailOfTheDay = () => {
   const [cocktail, setCocktail] = useState(null);
@@ -17,7 +16,7 @@ const CocktailOfTheDay = () => {
         setError("No cocktail available.");
         return;
       }
-      const detailRes = await axios.get(`http://127.0.0.1:8000/cocktails/${random.id}`);
+      const detailRes = await getCocktailById(random.id);
       setCocktail(detailRes.data);
     } catch (err) {
       console.error("Failed to load cocktail of the day", err);

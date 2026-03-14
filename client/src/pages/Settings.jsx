@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import useAuth from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import {
+  changePasswordRequest,
+  deleteAccountRequest,
+  disableAccountRequest,
+  getMeRequest,
+  updateMeRequest,
+  updatePreferencesRequest,
+} from "../api";
 
 const Settings = () => {
   const { token, logout } = useAuth();
@@ -20,17 +27,13 @@ const Settings = () => {
     "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.";
   const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
-  const authHeaders = token
-    ? { headers: { Authorization: `Bearer ${token}` } }
-    : undefined;
-
   useEffect(() => {
     const loadProfile = async () => {
       if (!token) {
         return;
       }
       try {
-        const res = await axios.get("http://127.0.0.1:8000/users/me", authHeaders);
+        const res = await getMeRequest(token);
         setUsername(res.data.username || "");
         setEmail(res.data.email || "");
         if (res.data.theme) {
@@ -61,11 +64,7 @@ const Settings = () => {
 
     if (persist && token) {
       try {
-        await axios.patch(
-          "http://127.0.0.1:8000/users/me/preferences",
-          { theme: newTheme },
-          authHeaders
-        );
+        await updatePreferencesRequest(token, newTheme);
       } catch (err) {
         setError(err.response?.data?.detail || "Failed to save theme");
       }
@@ -88,11 +87,7 @@ const Settings = () => {
       return;
     }
     try {
-      const res = await axios.patch(
-        "http://127.0.0.1:8000/users/me",
-        payload,
-        authHeaders
-      );
+      const res = await updateMeRequest(token, payload);
       setUsername(res.data.username || "");
       setEmail(res.data.email || "");
       setMessage("Profile updated");
@@ -114,11 +109,10 @@ const Settings = () => {
       return;
     }
     try {
-      await axios.post(
-        "http://127.0.0.1:8000/users/me/password",
-        { current_password: currentPassword, new_password: newPassword },
-        authHeaders
-      );
+      await changePasswordRequest(token, {
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
       setCurrentPassword("");
       setNewPassword("");
       setMessage("Password updated");
@@ -138,7 +132,7 @@ const Settings = () => {
     setMessage("");
     setError("");
     try {
-      await axios.delete("http://127.0.0.1:8000/users/me", authHeaders);
+      await deleteAccountRequest(token);
       logout();
       navigate("/register");
     } catch (err) {
@@ -153,7 +147,7 @@ const Settings = () => {
     setMessage("");
     setError("");
     try {
-      await axios.post("http://127.0.0.1:8000/users/me/disable", {}, authHeaders);
+      await disableAccountRequest(token);
       logout();
       navigate("/login");
     } catch (err) {

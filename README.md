@@ -13,13 +13,17 @@ Client reads `VITE_API_BASE_URL` from `client/.env`.
 ## Dev (recommended)
 cd /path/to/PersonalBartender
 npm install
+python -m pip install -r backend/requirements.txt
 npm --prefix client install
 npm run dev
+
+`npm run dev` now runs database migrations before starting the backend.
 
 For local development, create `client/.env` from `client/.env.example` if you need a different API URL.
 
 ## Manual
 cd backend
+python -m alembic -c alembic.ini upgrade head
 python -m uvicorn main:app --reload
 
 cd client

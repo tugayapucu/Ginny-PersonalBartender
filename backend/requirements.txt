@@ -1,4 +1,5 @@
 fastapi
+alembic
 uvicorn
 pydantic
 sqlite-utils

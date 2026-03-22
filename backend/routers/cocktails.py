@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from typing import List
@@ -35,7 +35,10 @@ def get_cocktail_by_id(id: int, db: Session = Depends(get_db)):
         {"id": id},
     ).mappings().first()
     if row is None:
-        return {"error": "Cocktail not found"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Cocktail not found",
+        )
 
     ingredients = db.execute(
         text(
@@ -122,7 +125,10 @@ def get_available_cocktails(
 def get_random_cocktail(db: Session = Depends(get_db)):
     count = db.execute(text("SELECT COUNT(*) FROM drinks")).scalar()
     if not count:
-        return {"error": "No cocktails available"}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No cocktails available",
+        )
     random_offset = random.randint(0, count - 1)
     row = db.execute(
         text(
@@ -132,5 +138,10 @@ def get_random_cocktail(db: Session = Depends(get_db)):
         ),
         {"offset": random_offset},
     ).mappings().first()
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No cocktails available",
+        )
 
     return dict(row)

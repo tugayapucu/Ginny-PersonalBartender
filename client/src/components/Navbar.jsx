@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
 
 const Navbar = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { authStatus, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -19,7 +19,7 @@ const Navbar = () => {
         <Link to="/available">What Can I Make?</Link>
         <Link to="/recipes">Recipes</Link>
         <Link to="/favorites">Favorites</Link>
-        {!isAuthenticated ? (
+        {authStatus === "checking" ? null : !isAuthenticated ? (
           <>
             <Link to="/login">Login</Link>
             <Link to="/register">Register</Link>

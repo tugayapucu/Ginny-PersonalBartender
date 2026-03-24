@@ -1,7 +1,9 @@
 # routers/favorites.py
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import text
 from sqlalchemy.orm import Session
+from typing import List
 from database import get_db
 import models, schemas
 from auth.dependencies import get_current_user  # This will extract user from token
@@ -35,6 +37,24 @@ def get_favorites(
 ):
     favorites = db.query(models.Favorite).filter_by(user_id=current_user.id).all()
     return [fav.cocktail_id for fav in favorites]
+
+
+@router.get("/cocktails", response_model=List[models.Cocktail])
+def get_favorite_cocktails(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    rows = db.execute(
+        text(
+            "SELECT d.id, d.name, d.category, d.alcoholic, d.glass, d.thumb_url "
+            "FROM favorites f "
+            "JOIN drinks d ON d.id = CAST(f.cocktail_id AS INTEGER) "
+            "WHERE f.user_id = :user_id "
+            "ORDER BY f.id DESC"
+        ),
+        {"user_id": current_user.id},
+    ).mappings().all()
+    return [dict(row) for row in rows]
 
 
 @router.delete("/{cocktail_id}")

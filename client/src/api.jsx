@@ -23,6 +23,8 @@ export const loginRequest = (payload) => API.post("/auth/login", payload);
 export const registerRequest = (payload) => API.post("/auth/register", payload);
 export const getFavoritesRequest = (token) =>
   API.get("/favorites/", authConfig(token));
+export const getFavoriteCocktailsRequest = (token) =>
+  API.get("/favorites/cocktails", authConfig(token));
 export const addFavoriteRequest = (token, cocktailId) =>
   API.post("/favorites/", { cocktail_id: String(cocktailId) }, authConfig(token));
 export const removeFavoriteRequest = (token, cocktailId) =>

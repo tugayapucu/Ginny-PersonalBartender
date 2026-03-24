@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import useFavorites from '../hooks/useFavorites'
-import { getCocktailById } from "../api";
+import { getFavoriteCocktailsRequest } from "../api";
 
 const Favorites = () => {
   const [cocktails, setCocktails] = useState([])
@@ -16,19 +16,15 @@ const Favorites = () => {
         return
       }
       try {
-        const cocktailPromises = favorites.map((id) =>
-          getCocktailById(id)
-        )
-        const responses = await Promise.all(cocktailPromises)
-        const data = responses.map((res) => res.data)
-        setCocktails(data)
+        const res = await getFavoriteCocktailsRequest(token)
+        setCocktails(res.data)
       } catch (err) {
         console.error('Failed to load favorite cocktails', err)
       }
     }
 
     fetchFavs()
-  }, [favorites])
+  }, [favorites, token])
 
   return (
     <div className="px-6 py-10 max-w-4xl mx-auto">

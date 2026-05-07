@@ -42,8 +42,8 @@ const Home = () => {
           <h1>Ginny</h1>
           <h2>Your Favourite Personal Bartender</h2>
           <p>
-            A cocktail information and recommendation system. Share and save
-            your favourite cocktails.
+            Browse recipes, search by name or ingredient, and save your
+            favourite cocktails.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mt-8">
             <Link to="/recipes" className="btn-primary">
@@ -80,15 +80,16 @@ const Home = () => {
             <div className="md:w-1/2 glass-card">
               <h2 className="mb-8">How It Works</h2>
               <p className="text-left mb-8">
-                Personal Bartender is a tool that helps you create cocktails
-                based on your preferences. Our intelligent system analyzes your
-                taste profile and suggests drinks you'll love.
+                Ginny is a cocktail discovery tool that helps you find drinks
+                you'll enjoy. Search by name or ingredient, see what you can
+                make with what's already in your kitchen, and build a personal
+                collection of favourites.
               </p>
 
               <ul className="text-xl text-left list-disc pl-5 space-y-4">
-                <li>Tell us what you like</li>
-                <li>Get personalized recommendations</li>
-                <li>Make amazing cocktails at home</li>
+                <li>Search by cocktail name or ingredient</li>
+                <li>Find drinks you can make right now</li>
+                <li>Save your favourites and come back any time</li>
               </ul>
             </div>
           </div>
@@ -158,12 +159,12 @@ const Home = () => {
             </div>
 
             <div className="feature-item">
-              <div className="feature-icon">🧠</div>
+              <div className="feature-icon">🧪</div>
               <div>
-                <h5 className="mb-2">Smart Recommendations</h5>
+                <h5 className="mb-2">What Can I Make?</h5>
                 <p className="text-left text-base mb-0">
-                  Get personalized cocktail recommendations based on your unique
-                  taste preferences
+                  Enter the ingredients you have on hand and instantly see every
+                  cocktail you can make right now
                 </p>
               </div>
             </div>
@@ -180,12 +181,12 @@ const Home = () => {
             </div>
 
             <div className="feature-item">
-              <div className="feature-icon">✏️</div>
+              <div className="feature-icon">⚙️</div>
               <div>
-                <h5 className="mb-2">Create & Share</h5>
+                <h5 className="mb-2">Your Account</h5>
                 <p className="text-left text-base mb-0">
-                  Create, save, and share your own unique cocktail recipes with
-                  our passionate community
+                  Update your profile, change your password, and choose a light
+                  or dark theme — all saved to your account
                 </p>
               </div>
             </div>

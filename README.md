@@ -266,6 +266,7 @@ Completed features are listed under [Features](#features). Everything below is p
 - [ ] **GitHub Actions CI** — lint (ESLint + `ruff` / `flake8`) and test (pytest + Vitest) on every push and pull request
 - [ ] **PostgreSQL support** — read `DATABASE_URL` from the environment so SQLite is used locally and Postgres is used in production without any code changes
 - [ ] **Deployment guide** — document deploying the backend to Railway or Render and the frontend to Vercel or Netlify, including environment variable configuration
+- [ ] **Hero video hosting** — move the 29.8 MB background video out of the Vite bundle; host on a CDN or replace with a YouTube embed so it is streamed rather than bundled and served as a static asset
 
 ### Future product features
 

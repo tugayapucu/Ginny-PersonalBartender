@@ -149,8 +149,9 @@ npm install
 pip install -r backend/requirements.txt
 npm --prefix client install
 
-# Copy and edit the frontend env file
-cp client/.env.example client/.env
+# Copy and edit environment files
+cp backend/.env.example backend/.env   # set GINNY_SECRET_KEY at minimum
+cp client/.env.example client/.env     # adjust VITE_API_BASE_URL if needed
 
 npm run dev
 ```
@@ -162,11 +163,13 @@ npm run dev
 ```bash
 # Terminal 1 — backend
 cd backend
+cp .env.example .env   # edit .env before starting
 python -m alembic -c alembic.ini upgrade head
 python -m uvicorn main:app --reload
 
 # Terminal 2 — frontend
 cd client
+cp .env.example .env
 npm run dev
 ```
 
@@ -174,21 +177,23 @@ npm run dev
 
 ## Environment Variables
 
-### Backend (shell or hosting platform)
+### Backend (`backend/.env`)
+
+Copy `backend/.env.example` to `backend/.env` and fill in the values. The backend reads variables directly from the shell environment, so you can also export them from your hosting platform instead of using a file.
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `GINNY_SECRET_KEY` | Yes (prod) | `development-only-change-me` | HS256 signing key for JWT tokens |
-| `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` | Comma-separated list of allowed origins |
+| `GINNY_SECRET_KEY` | **Yes (prod)** | `development-only-change-me` | HS256 signing key for JWT tokens. Generate with `python -c "import secrets; print(secrets.token_hex(32))"` |
+| `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173, http://127.0.0.1:5173` | Comma-separated list of allowed origins |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `60` | JWT lifetime in minutes |
 
 ### Frontend (`client/.env`)
 
+Copy `client/.env.example` to `client/.env`.
+
 | Variable | Default | Description |
 |---|---|---|
 | `VITE_API_BASE_URL` | `http://127.0.0.1:8000` | Base URL for all API requests |
-
-Copy `client/.env.example` to `client/.env` for local development.
 
 ---
 

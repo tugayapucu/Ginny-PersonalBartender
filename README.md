@@ -237,14 +237,42 @@ There are currently no automated tests. Adding a pytest suite for the backend AP
 
 ## Roadmap
 
-- [ ] pytest suite: register → login → add favourite happy-path; 401/403/404 edge cases
-- [ ] Vitest + React Testing Library for `useAuth` and `useFavorites` hooks
-- [ ] Docker Compose for one-command local setup
-- [ ] GitHub Actions CI (lint + test on every push)
-- [ ] Date-seeded "Cocktail of the Day" so the pick is stable for a full calendar day
-- [ ] PostgreSQL support via a DATABASE_URL env variable (SQLite for local, Postgres for prod)
-- [ ] User-created recipes (POST /cocktails with auth)
-- [ ] Ingredient-based preference profile and simple recommendation scoring
+Completed features are listed under [Features](#features). Everything below is planned work not yet implemented.
+
+### Near term
+
+- [ ] **pytest suite** — register → login → add favourite happy-path; 401 / 403 / 404 edge cases for every protected endpoint
+- [ ] **Vitest + React Testing Library** — unit tests for `useAuth` and `useFavorites`; smoke tests for `ProtectedRoute` redirect behaviour
+- [ ] **Date-seeded Cocktail of the Day** — use `random.seed(date.today().toordinal())` so the pick is stable for a full calendar day rather than re-randomising on every page load
+- [ ] **Cocktail data seed / import script** — a standalone script (`backend/seed.py`) to document how the pre-seeded SQLite file was built and allow re-seeding from a source CSV or the public CocktailDB API
+
+### Backend improvements
+
+- [ ] **Pagination** — add `limit` / `offset` query parameters to `GET /cocktails` and `GET /search`; return a `total` count so the frontend can render page controls
+- [ ] **Advanced filtering** — filter cocktails by category (e.g. "Ordinary Drink", "Shot") and alcoholic/non-alcoholic flag using existing database columns
+- [ ] **Input validation tightening** — enforce max lengths on username and email in Pydantic schemas; return consistent `422` error shapes for all invalid inputs
+- [ ] **Refresh tokens** — issue a short-lived access token and a longer-lived refresh token so users are not logged out every hour
+
+### Frontend improvements
+
+- [ ] **Search pagination / infinite scroll** — consume the paginated API and render a "Load more" button or infinite scroll in `CocktailList`
+- [ ] **Skeleton loading states** — replace plain text loading indicators with Tailwind skeleton placeholders on the recipe grid, cocktail detail, and favourites pages
+- [ ] **Toast notifications** — replace inline success/error messages in Settings with a non-blocking toast component
+- [ ] **Empty state illustrations** — add a friendly empty state to the Favourites page when the user has not saved anything yet
+
+### Production / deployment
+
+- [ ] **Docker Compose** — single `docker compose up` to start the backend and serve the built frontend; simplifies reviewer setup and acts as a deployment artefact
+- [ ] **GitHub Actions CI** — lint (ESLint + `ruff` / `flake8`) and test (pytest + Vitest) on every push and pull request
+- [ ] **PostgreSQL support** — read `DATABASE_URL` from the environment so SQLite is used locally and Postgres is used in production without any code changes
+- [ ] **Deployment guide** — document deploying the backend to Railway or Render and the frontend to Vercel or Netlify, including environment variable configuration
+
+### Future product features
+
+- [ ] **User pantry** — let users save a persistent list of ingredients they own, pre-populating the "What Can I Make?" page automatically
+- [ ] **Recommendation scoring** — score cocktails against a user's favourites history (shared ingredients, same category) and surface a "You might also like" section on the cocktail detail page
+- [ ] **User-created recipes** — authenticated `POST /cocktails` endpoint with a form-based UI; user-submitted recipes stored separately from the seeded catalogue
+- [ ] **Recipe ratings** — allow users to rate cocktails and sort the browse page by average rating
 
 ---
 

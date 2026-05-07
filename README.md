@@ -276,23 +276,44 @@ Completed features are listed under [Features](#features). Everything below is p
 
 ---
 
-## Portfolio Notes
+## What This Project Demonstrates
 
-This project was built to demonstrate practical full-stack engineering skills in a realistic, self-contained application:
+Ginny was built as a realistic full-stack application to show practical backend and frontend engineering skills in a single, cohesive codebase. It is not a tutorial clone — every layer was designed and wired together from scratch.
 
-**Backend design**
-- FastAPI router structure separating concerns (cocktails, auth, users, favourites)
-- SQLAlchemy ORM with a clean `get_db()` dependency injection pattern
-- Alembic migration workflow decoupled from application startup
-- JWT authentication with a reusable `get_current_user` FastAPI dependency
-- Server-side password strength validation with a dedicated security module
-- Two-layer access control: client-side protected routes and server-side auth dependencies
+### REST API design
 
-**Frontend design**
-- React Context (`useAuth`) as a single source of truth for authentication state, with auto-validation on mount and cross-tab storage events
-- Custom hook (`useFavorites`) encapsulating remote state with optimistic local updates
-- Debounced search input to limit unnecessary API calls
-- Theme preference round-tripped to the server and re-applied on login, not just stored in `localStorage`
+The FastAPI backend is split into four routers (`cocktails`, `auth`, `users`, `favorites`), each with a single responsibility. Endpoints follow REST conventions — correct HTTP verbs, meaningful status codes, and Pydantic schemas for both request validation and response shaping. The interactive Swagger UI at `/docs` is available out of the box.
+
+### Authentication and authorisation
+
+JWT-based auth is implemented end-to-end:
+- Passwords are hashed with bcrypt and validated server-side against a strength regex before storage
+- Tokens are signed with HS256 and verified on every protected request via a reusable `get_current_user` FastAPI dependency
+- Disabled accounts are rejected at the token-validation layer, not just in business logic
+- The frontend mirrors this with a `ProtectedRoute` component that checks auth state before rendering any guarded page, and an `AuthContext` that re-validates the stored token on mount and across browser tabs via the `storage` event
+
+### Database design and migrations
+
+User and favourites data is managed through SQLAlchemy ORM models with a clean `get_db()` dependency injection pattern. Schema evolution is handled by Alembic — migrations run automatically as part of `npm run dev` and can be applied manually, keeping the migration history separate from application startup. The pre-seeded cocktail catalogue is queried via the same SQLAlchemy session, keeping the data access layer consistent across both data sources.
+
+### React state management and hooks
+
+- `useAuth` is a context-based hook that owns the full authentication lifecycle: token storage, status transitions (`unauthenticated` → `checking` → `authenticated`), login, logout, and session refresh
+- `useFavorites` encapsulates remote favourite state with optimistic local updates so the UI responds immediately without waiting for the server round-trip
+- Search input uses a 400 ms debounce to avoid firing a request on every keystroke
+- Theme preference is persisted to the backend and rehydrated on login, rather than relying solely on `localStorage`
+
+### Client–server integration
+
+The frontend communicates exclusively through a typed Axios helper layer (`src/api.jsx`) that centralises the base URL, attaches the auth token, and exposes one function per endpoint. This keeps component code free of raw HTTP calls and makes the API contract easy to inspect in one place.
+
+### Environment-based configuration
+
+Both tiers are configured through environment variables with sensible defaults for local development. The backend reads `GINNY_SECRET_KEY`, `CORS_ALLOWED_ORIGINS`, and `ACCESS_TOKEN_EXPIRE_MINUTES` via `settings.py`; the frontend reads `VITE_API_BASE_URL`. Each tier ships a `.env.example` file. No secrets are hardcoded.
+
+### Planned production work
+
+The project is functional but not yet production-hardened. The [Roadmap](#roadmap) section covers the concrete next steps: automated test suites (pytest + Vitest), GitHub Actions CI, Docker Compose, and PostgreSQL support. These are acknowledged gaps, not oversights — the priority was to build a complete, working feature set first.
 
 ---
 

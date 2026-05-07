@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import useAuth from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import {
@@ -27,27 +27,7 @@ const Settings = () => {
     "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol.";
   const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      if (!token) {
-        return;
-      }
-      try {
-        const res = await getMeRequest(token);
-        setUsername(res.data.username || "");
-        setEmail(res.data.email || "");
-        if (res.data.theme) {
-          handleThemeChange(res.data.theme, false);
-        }
-      } catch (err) {
-        setError(err.response?.data?.detail || "Failed to load profile");
-      }
-    };
-
-    loadProfile();
-  }, [token]);
-
-  const handleThemeChange = async (newTheme, persist = true) => {
+  const handleThemeChange = useCallback(async (newTheme, persist = true) => {
     setTheme(newTheme);
     localStorage.setItem("theme", newTheme);
 
@@ -69,7 +49,27 @@ const Settings = () => {
         setError(err.response?.data?.detail || "Failed to save theme");
       }
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!token) {
+        return;
+      }
+      try {
+        const res = await getMeRequest(token);
+        setUsername(res.data.username || "");
+        setEmail(res.data.email || "");
+        if (res.data.theme) {
+          handleThemeChange(res.data.theme, false);
+        }
+      } catch (err) {
+        setError(err.response?.data?.detail || "Failed to load profile");
+      }
+    };
+
+    loadProfile();
+  }, [token, handleThemeChange]);
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault();

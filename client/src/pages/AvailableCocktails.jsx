@@ -33,21 +33,20 @@ function AvailableCocktails() {
     setIngredients(ingredients.filter(i => i !== ing))
   }
 
-  const fetchAvailableCocktails = async () => {
-    try {
-      const res = await getAvailableCocktails(ingredients)
-      setCocktails(res.data)
-    } catch (err) {
-      console.error('Fetch failed:', err)
-    }
-  }
-
   useEffect(() => {
-    if (ingredients.length > 0) {
-      fetchAvailableCocktails()
-    } else {
+    if (ingredients.length === 0) {
       setCocktails([])
+      return
     }
+    const fetchAvailableCocktails = async () => {
+      try {
+        const res = await getAvailableCocktails(ingredients)
+        setCocktails(res.data)
+      } catch (err) {
+        console.error('Fetch failed:', err)
+      }
+    }
+    fetchAvailableCocktails()
   }, [ingredients])
 
   return (

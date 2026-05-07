@@ -7,7 +7,27 @@ Built as a full-stack portfolio project to demonstrate a production-shaped backe
 
 ## Screenshots
 
-> _Screenshots / GIF demo coming soon._
+<!--
+  Replace each placeholder below with an actual image once you have captured
+  screenshots locally or from a deployed instance.
+
+  Recommended capture order:
+    1. Run the app locally (npm run dev)
+    2. Take screenshots at 1280×800 or wider
+    3. Save images to docs/screenshots/ and update the src paths below
+
+  Example replacement:
+    ![Home page](docs/screenshots/home.png)
+-->
+
+| Page | Preview |
+|---|---|
+| **Home** | `docs/screenshots/home.png` — hero, How It Works, Cocktail of the Day, features grid |
+| **Recipe Search** | `docs/screenshots/recipes.png` — search bar, cocktail grid, favourite toggle |
+| **Cocktail Detail** | `docs/screenshots/cocktail-detail.png` — ingredients list, instructions, glass type |
+| **What Can I Make?** | `docs/screenshots/available.png` — ingredient input, matching cocktail results |
+| **Favourites** | `docs/screenshots/favorites.png` — saved cocktail grid, remove button |
+| **Settings** | `docs/screenshots/settings.png` — profile form, password change, theme selector |
 
 ---
 

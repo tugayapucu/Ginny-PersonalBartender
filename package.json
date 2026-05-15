@@ -8,6 +8,8 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm --prefix client run dev\"",
     "dev:backend": "npm run migrate && python -m uvicorn main:app --reload --app-dir backend",
     "dev:client": "npm --prefix client run dev",
-    "migrate": "python -m alembic -c backend/alembic.ini upgrade head"
+    "migrate": "python -m alembic -c backend/alembic.ini upgrade head",
+    "seed": "python backend/scripts/seed_cocktails.py",
+    "setup": "npm run migrate && npm run seed"
   }
 }

@@ -159,37 +159,54 @@ Interactive docs are available at `http://127.0.0.1:8000/docs` when the backend 
 - Python 3.11+
 - Node.js 18+
 
-### Recommended (runs migrations automatically)
+### Fresh clone (recommended)
 
 ```bash
 git clone https://github.com/tugayapucu/PersonalBartender.git
 cd PersonalBartender
 
+# 1. Install dependencies
 npm install
 pip install -r backend/requirements.txt
 npm --prefix client install
 
-# Copy and edit environment files
-cp backend/.env.example backend/.env   # set GINNY_SECRET_KEY at minimum
-cp client/.env.example client/.env     # adjust VITE_API_BASE_URL if needed
+# 2. Copy environment files and fill in values
+#    Unix / macOS
+cp backend/.env.example backend/.env
+cp client/.env.example client/.env
+#    Windows (PowerShell)
+#    copy backend\.env.example backend\.env
+#    copy client\.env.example client\.env
 
+# 3. Run migrations and seed cocktail data (run once per clone)
+npm run setup
+
+# 4. Start the dev servers
 npm run dev
 ```
 
-`npm run dev` runs Alembic migrations and then starts both the FastAPI backend and the Vite dev server concurrently.
+`npm run setup` runs Alembic migrations (`upgrade head`) then loads the full cocktail catalogue from `cocktails_all.jsonl` into the database. It is safe to re-run — it clears and reloads catalogue data without touching user accounts or favourites.
+
+`npm run dev` runs migrations on every start (fast, idempotent) and then launches the FastAPI backend and the Vite dev server concurrently.
 
 ### Manual
 
 ```bash
 # Terminal 1 — backend
 cd backend
-cp .env.example .env   # edit .env before starting
+# Unix: cp .env.example .env
+# Windows: copy .env.example .env
+# Edit .env and set GINNY_SECRET_KEY before continuing
+
 python -m alembic -c alembic.ini upgrade head
-python -m uvicorn main:app --reload
+cd ..
+python backend/scripts/seed_cocktails.py
+python -m uvicorn main:app --reload --app-dir backend
 
 # Terminal 2 — frontend
 cd client
-cp .env.example .env
+# Unix: cp .env.example .env
+# Windows: copy .env.example .env
 npm run dev
 ```
 
@@ -223,7 +240,10 @@ From the project root:
 
 | Script | Description |
 |---|---|
-| `npm run dev` | Run migrations, start backend + frontend dev servers |
+| `npm run setup` | Run migrations then seed cocktail data — run once after a fresh clone |
+| `npm run migrate` | Apply Alembic migrations (`upgrade head`) |
+| `npm run seed` | Load cocktail catalogue from `cocktails_all.jsonl` into the database |
+| `npm run dev` | Run migrations and start backend + frontend dev servers concurrently |
 | `npm --prefix client run build` | Production build of the React app |
 | `npm --prefix client run lint` | ESLint across the client source |
 

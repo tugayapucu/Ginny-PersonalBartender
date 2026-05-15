@@ -1,10 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 from routers import cocktails
 from routers import users
 from auth.routes import router as auth_router
 from routers import favorites
 from settings import CORS_ALLOWED_ORIGINS
+from database import engine
 
 
 app = FastAPI(title="Ginny Personal Bartender API")
@@ -16,6 +18,27 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/health", tags=["health"])
+def health_check():
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "status": "error",
+                "service": "Ginny Personal Bartender API",
+                "database": "unavailable",
+            },
+        )
+    return {
+        "status": "ok",
+        "service": "Ginny Personal Bartender API",
+        "database": "ok",
+    }
+
 
 # Route registration
 app.include_router(cocktails.router)

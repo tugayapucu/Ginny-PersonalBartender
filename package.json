@@ -10,6 +10,7 @@
     "dev:client": "npm --prefix client run dev",
     "migrate": "python -m alembic -c backend/alembic.ini upgrade head",
     "seed": "python backend/scripts/seed_cocktails.py",
-    "setup": "npm run migrate && npm run seed"
+    "setup": "npm run migrate && npm run seed",
+    "test:backend": "python -m pytest backend/tests -v"
   }
 }

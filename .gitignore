@@ -31,7 +31,6 @@ Thumbs.db
 
 # Local data
 *.db
-cocktails_all.jsonl
 
 # VS Code
 .vscode/

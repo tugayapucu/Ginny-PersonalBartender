@@ -112,7 +112,7 @@ def db():
     try:
         yield session
     finally:
-        # Remove per-test user data; cocktail rows are left intact.
+        session.rollback()  # clear any failed transaction before cleanup
         session.execute(text("DELETE FROM favorites"))
         session.execute(text("DELETE FROM users"))
         session.commit()

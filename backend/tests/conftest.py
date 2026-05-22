@@ -27,8 +27,9 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-# Make backend/ importable regardless of where pytest is invoked from.
+# Make backend/ and backend/tests/ importable regardless of invocation directory.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from database import Base, get_db          # noqa: E402
 from main import app                        # noqa: E402

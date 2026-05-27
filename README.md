@@ -244,6 +244,11 @@ From the project root:
 | `npm run migrate` | Apply Alembic migrations (`upgrade head`) |
 | `npm run seed` | Load cocktail catalogue from `cocktails_all.jsonl` into the database |
 | `npm run dev` | Run migrations and start backend + frontend dev servers concurrently |
+| `npm run test` | Run backend pytest + frontend Vitest (no servers required) |
+| `npm run test:backend` | Backend pytest suite only |
+| `npm run test:client` | Frontend Vitest suite only |
+| `npm run test:e2e` | Playwright E2E tests (auto-starts both servers) |
+| `npm run test:e2e:ui` | Playwright with the interactive UI runner |
 | `npm --prefix client run build` | Production build of the React app |
 | `npm --prefix client run lint` | ESLint across the client source |
 
@@ -251,7 +256,52 @@ From the project root:
 
 ## Testing
 
-There are currently no automated tests. Adding a pytest suite for the backend API and a Vitest suite for the frontend hooks is on the roadmap (see below).
+### Install test dependencies
+
+```bash
+# Backend
+pip install -r backend/requirements-dev.txt
+
+# Frontend (already installed as devDependencies via npm install)
+
+# E2E — install Chromium browser binaries once
+npx playwright install chromium
+```
+
+### Run tests
+
+| Command | What it runs |
+|---|---|
+| `npm run test` | Backend pytest + frontend Vitest (no servers required) |
+| `npm run test:backend` | pytest only |
+| `npm run test:client` | Vitest only |
+| `npm run test:e2e` | Playwright E2E (auto-starts backend + frontend via webServer config) |
+| `npm run test:e2e:ui` | Playwright with the interactive UI |
+
+> **Before running E2E tests on a fresh clone**, seed the database first:
+> ```bash
+> npm run setup
+> npm run test:e2e
+> ```
+
+### What is tested
+
+**Backend — 31 pytest tests** (`backend/tests/`)
+
+- `test_smoke.py` — API reachable, seeded data queryable, test DB isolated from production
+- `test_auth.py` — registration (success, duplicate email/username, weak password), login (success, wrong password, nonexistent email, disabled account)
+- `test_favorites.py` — unauthenticated rejection, add/duplicate/list/remove CRUD, full cocktail detail via `/favorites/cocktails`, cross-user isolation
+- `test_users.py` — `GET /users/me`, profile update, duplicate username, theme preference, password change, disable, delete
+
+All backend tests use an **in-memory SQLite database** — they never read or write `backend/ginny_database.db`.
+
+**Frontend — 6 Vitest/RTL smoke tests** (`client/src/test/smoke.test.jsx`)
+
+Rendering checks only — no server required. Covers Navbar, Login, Register, ProtectedRoute redirect, CocktailList (mocked API), and Settings section headings. Does not test user interactions or API integration.
+
+**E2E — 2 Playwright tests** (`e2e/smoke.spec.js`)
+
+Foundation only. Verifies the home page loads with the Ginny brand visible and that `/login` renders the login form against real running servers. Full user-journey tests (register → search → favourite) are on the roadmap.
 
 ---
 
@@ -261,10 +311,9 @@ Completed features are listed under [Features](#features). Everything below is p
 
 ### Near term
 
-- [ ] **pytest suite** — register → login → add favourite happy-path; 401 / 403 / 404 edge cases for every protected endpoint
-- [ ] **Vitest + React Testing Library** — unit tests for `useAuth` and `useFavorites`; smoke tests for `ProtectedRoute` redirect behaviour
+- [ ] **Playwright E2E expansion** — register → login → search → add favourite → remove favourite journey; stable selectors (`data-testid`) on key interactive elements
+- [ ] **GitHub Actions CI** — run `npm run test` on every push; Playwright on pull requests
 - [ ] **Date-seeded Cocktail of the Day** — use `random.seed(date.today().toordinal())` so the pick is stable for a full calendar day rather than re-randomising on every page load
-- [ ] **Cocktail data seed / import script** — a standalone script (`backend/seed.py`) to document how the pre-seeded SQLite file was built and allow re-seeding from a source CSV or the public CocktailDB API
 
 ### Backend improvements
 
@@ -334,7 +383,7 @@ Both tiers are configured through environment variables with sensible defaults f
 
 ### Planned production work
 
-The project is functional but not yet production-hardened. The [Roadmap](#roadmap) section covers the concrete next steps: automated test suites (pytest + Vitest), GitHub Actions CI, Docker Compose, and PostgreSQL support. These are acknowledged gaps, not oversights — the priority was to build a complete, working feature set first.
+The project is functional but not yet production-hardened. The [Roadmap](#roadmap) section covers the concrete next steps: GitHub Actions CI, Docker Compose, and PostgreSQL support. These are acknowledged gaps, not oversights — the priority was to build a complete, working feature set and a meaningful test suite first.
 
 ---
 

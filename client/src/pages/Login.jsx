@@ -34,8 +34,9 @@ const Login = () => {
         <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
         {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm mb-2">Email</label>
+          <label htmlFor="email" className="block text-gray-700 text-sm mb-2">Email</label>
           <input
+            id="email"
             className="shadow border rounded w-full py-2 px-3 text-gray-700"
             type="email"
             value={email}
@@ -44,8 +45,9 @@ const Login = () => {
           />
         </div>
         <div className="mb-6">
-          <label className="block text-gray-700 text-sm mb-2">Password</label>
+          <label htmlFor="password" className="block text-gray-700 text-sm mb-2">Password</label>
           <input
+            id="password"
             className="shadow border rounded w-full py-2 px-3 text-gray-700"
             type="password"
             value={password}

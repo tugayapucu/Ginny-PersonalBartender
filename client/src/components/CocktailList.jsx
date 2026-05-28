@@ -106,30 +106,33 @@ const CocktailList = () => {
       {showLoader && <p className="text-center">Loading...</p>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {cocktails.map((cocktail) => (
-          <Link to={`/cocktails/${cocktail.id}`} key={cocktail.id}>
-            <div className="border rounded-xl shadow p-4 text-center hover:scale-105 transition cursor-pointer relative">
-              <img
-                src={cocktail.thumb_url}
-                alt={cocktail.name}
-                className="w-full h-48 object-cover rounded"
-              />
-              <h3 className="text-lg font-bold mt-4">{cocktail.name}</h3>
-              <p className="text-sm text-gray-600">{cocktail.category}</p>
+        {cocktails.map((cocktail) => {
+          const isFav = favorites.map(String).includes(String(cocktail.id));
+          return (
+            <Link to={`/cocktails/${cocktail.id}`} key={cocktail.id}>
+              <div data-testid="cocktail-card" className="border rounded-xl shadow p-4 text-center hover:scale-105 transition cursor-pointer relative">
+                <img
+                  src={cocktail.thumb_url}
+                  alt={cocktail.name}
+                  className="w-full h-48 object-cover rounded"
+                />
+                <h3 className="text-lg font-bold mt-4">{cocktail.name}</h3>
+                <p className="text-sm text-gray-600">{cocktail.category}</p>
 
-              {/* ❤️ Favorite Icon */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault(); // prevent navigating
-                  toggleFavorite(cocktail.id);
-                }}
-                className="absolute top-2 right-2 text-xl"
-              >
-                {favorites.map(String).includes(String(cocktail.id)) ? "❤️" : "🤍"}
-              </button>
-            </div>
-          </Link>
-        ))}
+                <button
+                  aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleFavorite(cocktail.id);
+                  }}
+                  className="absolute top-2 right-2 text-xl"
+                >
+                  {isFav ? "❤️" : "🤍"}
+                </button>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

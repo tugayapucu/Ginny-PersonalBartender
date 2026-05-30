@@ -1,7 +1,19 @@
-from sqlalchemy import text
-from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy import func, case, distinct
+from sqlalchemy.orm import Session, joinedload
+from typing import List, Optional
 import random
+from models import Drink, DrinkIngredient, Ingredient
+
+
+def _to_summary(drink: Drink) -> dict:
+    return {
+        "id": drink.id,
+        "name": drink.name,
+        "category": drink.category,
+        "alcoholic": drink.alcoholic,
+        "glass": drink.glass,
+        "thumb_url": drink.thumb_url,
+    }
 
 
 def normalize_query(value: str) -> str:
@@ -9,112 +21,84 @@ def normalize_query(value: str) -> str:
 
 
 def list_cocktails(db: Session) -> List[dict]:
-    rows = db.execute(
-        text(
-            "SELECT id, name, category, alcoholic, glass, thumb_url "
-            "FROM drinks "
-            "LIMIT 50"
+    drinks = db.query(Drink).limit(50).all()
+    return [_to_summary(d) for d in drinks]
+
+
+def get_by_id(db: Session, id: int) -> Optional[dict]:
+    drink = (
+        db.query(Drink)
+        .options(
+            joinedload(Drink.drink_ingredients).joinedload(DrinkIngredient.ingredient)
         )
-    ).mappings().all()
-    return [dict(row) for row in rows]
-
-
-def get_by_id(db: Session, id: int):
-    row = db.execute(
-        text(
-            "SELECT id, name, category, alcoholic, glass, instructions, thumb_url "
-            "FROM drinks "
-            "WHERE id = :id"
-        ),
-        {"id": id},
-    ).mappings().first()
-    if row is None:
+        .filter(Drink.id == id)
+        .first()
+    )
+    if drink is None:
         return None
-
-    ingredients = db.execute(
-        text(
-            "SELECT i.name AS ingredient, di.measure AS measure "
-            "FROM drink_ingredients di "
-            "JOIN ingredients i ON i.id = di.ingredient_id "
-            "WHERE di.drink_id = :id "
-            "ORDER BY di.position"
-        ),
-        {"id": id},
-    ).mappings().all()
-
-    cocktail = dict(row)
-    cocktail["ingredients"] = [dict(item) for item in ingredients]
-    return cocktail
+    result = _to_summary(drink)
+    result["instructions"] = drink.instructions
+    result["ingredients"] = [
+        {"ingredient": di.ingredient.name, "measure": di.measure}
+        for di in sorted(drink.drink_ingredients, key=lambda di: di.position)
+    ]
+    return result
 
 
 def search(db: Session, query: str) -> List[dict]:
     query_like = f"%{normalize_query(query)}%"
-    name_matches = db.execute(
-        text(
-            "SELECT id, name, category, alcoholic, glass, thumb_url "
-            "FROM drinks "
-            "WHERE LOWER(name) LIKE :query"
-        ),
-        {"query": query_like},
-    ).mappings().all()
 
-    ingredient_matches = db.execute(
-        text(
-            "SELECT DISTINCT d.id, d.name, d.category, d.alcoholic, d.glass, d.thumb_url "
-            "FROM drinks d "
-            "JOIN drink_ingredients di ON di.drink_id = d.id "
-            "JOIN ingredients i ON i.id = di.ingredient_id "
-            "WHERE i.name_key LIKE :query"
-        ),
-        {"query": query_like},
-    ).mappings().all()
+    name_matches = (
+        db.query(Drink)
+        .filter(func.lower(Drink.name).like(query_like))
+        .all()
+    )
+
+    ingredient_matches = (
+        db.query(Drink)
+        .join(DrinkIngredient, Drink.id == DrinkIngredient.drink_id)
+        .join(Ingredient, DrinkIngredient.ingredient_id == Ingredient.id)
+        .filter(Ingredient.name_key.like(query_like))
+        .distinct()
+        .all()
+    )
 
     seen_ids: set = set()
-    all_results: List[dict] = []
-    for row in name_matches + ingredient_matches:
-        if row["id"] not in seen_ids:
-            seen_ids.add(row["id"])
-            all_results.append(dict(row))
-
-    return all_results
+    results: List[dict] = []
+    for drink in name_matches + ingredient_matches:
+        if drink.id not in seen_ids:
+            seen_ids.add(drink.id)
+            results.append(_to_summary(drink))
+    return results
 
 
 def get_available(db: Session, ingredient_keys: List[str]) -> List[dict]:
     if not ingredient_keys:
         return []
 
-    placeholders = ", ".join([f":ing{i}" for i in range(len(ingredient_keys))])
-    params = {f"ing{i}": ing for i, ing in enumerate(ingredient_keys)}
-    params["ingredient_count"] = len(ingredient_keys)
+    # COUNT(DISTINCT CASE WHEN name_key IN (...) THEN name_key END) = n
+    # finds drinks that contain all n requested ingredients.
+    case_expr = case(
+        (Ingredient.name_key.in_(ingredient_keys), Ingredient.name_key),
+        else_=None,
+    )
+    matched_count = func.count(distinct(case_expr))
 
-    rows = db.execute(
-        text(
-            "SELECT d.id, d.name, d.category, d.alcoholic, d.glass, d.thumb_url "
-            "FROM drinks d "
-            "JOIN drink_ingredients di ON di.drink_id = d.id "
-            "JOIN ingredients i ON i.id = di.ingredient_id "
-            "GROUP BY d.id "
-            "HAVING COUNT(DISTINCT CASE WHEN i.name_key IN ("
-            + placeholders
-            + ") THEN i.name_key END) = :ingredient_count"
-        ),
-        params,
-    ).mappings().all()
-
-    return [dict(row) for row in rows]
+    drinks = (
+        db.query(Drink)
+        .join(DrinkIngredient, Drink.id == DrinkIngredient.drink_id)
+        .join(Ingredient, DrinkIngredient.ingredient_id == Ingredient.id)
+        .group_by(Drink.id)
+        .having(matched_count == len(ingredient_keys))
+        .all()
+    )
+    return [_to_summary(d) for d in drinks]
 
 
-def get_random(db: Session):
-    count = db.execute(text("SELECT COUNT(*) FROM drinks")).scalar()
+def get_random(db: Session) -> Optional[dict]:
+    count = db.query(Drink).count()
     if not count:
         return None
     random_offset = random.randint(0, count - 1)
-    row = db.execute(
-        text(
-            "SELECT id, name, category, alcoholic, glass, thumb_url "
-            "FROM drinks "
-            "LIMIT 1 OFFSET :offset"
-        ),
-        {"offset": random_offset},
-    ).mappings().first()
-    return dict(row) if row else None
+    drink = db.query(Drink).offset(random_offset).limit(1).first()
+    return _to_summary(drink) if drink else None

@@ -1,92 +1,29 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 from typing import List
 from models import Cocktail
-import random
 from database import get_db
+from services import cocktail_service
 
 router = APIRouter()
-
-def normalize_query(value: str) -> str:
-    return " ".join(value.strip().split()).lower()
 
 
 @router.get("/cocktails", response_model=List[Cocktail])
 def get_cocktails(db: Session = Depends(get_db)):
-    rows = db.execute(
-        text(
-            "SELECT id, name, category, alcoholic, glass, thumb_url "
-            "FROM drinks "
-            "LIMIT 50"
-        )
-    ).mappings().all()
-    return [dict(row) for row in rows]
+    return cocktail_service.list_cocktails(db)
 
 
 @router.get("/cocktails/{id}", response_model=Cocktail)
 def get_cocktail_by_id(id: int, db: Session = Depends(get_db)):
-    row = db.execute(
-        text(
-            "SELECT id, name, category, alcoholic, glass, instructions, thumb_url "
-            "FROM drinks "
-            "WHERE id = :id"
-        ),
-        {"id": id},
-    ).mappings().first()
-    if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cocktail not found",
-        )
-
-    ingredients = db.execute(
-        text(
-            "SELECT i.name AS ingredient, di.measure AS measure "
-            "FROM drink_ingredients di "
-            "JOIN ingredients i ON i.id = di.ingredient_id "
-            "WHERE di.drink_id = :id "
-            "ORDER BY di.position"
-        ),
-        {"id": id},
-    ).mappings().all()
-
-    cocktail = dict(row)
-    cocktail["ingredients"] = [dict(item) for item in ingredients]
-    return cocktail
+    result = cocktail_service.get_by_id(db, id)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cocktail not found")
+    return result
 
 
 @router.get("/search", response_model=List[Cocktail])
 def search_cocktails(query: str = Query(..., min_length=1), db: Session = Depends(get_db)):
-    query_like = f"%{normalize_query(query)}%"
-    name_matches = db.execute(
-        text(
-            "SELECT id, name, category, alcoholic, glass, thumb_url "
-            "FROM drinks "
-            "WHERE LOWER(name) LIKE :query"
-        ),
-        {"query": query_like},
-    ).mappings().all()
-
-    ingredient_matches = db.execute(
-        text(
-            "SELECT DISTINCT d.id, d.name, d.category, d.alcoholic, d.glass, d.thumb_url "
-            "FROM drinks d "
-            "JOIN drink_ingredients di ON di.drink_id = d.id "
-            "JOIN ingredients i ON i.id = di.ingredient_id "
-            "WHERE i.name_key LIKE :query"
-        ),
-        {"query": query_like},
-    ).mappings().all()
-
-    seen_ids = set()
-    all_results = []
-    for row in name_matches + ingredient_matches:
-        if row["id"] not in seen_ids:
-            seen_ids.add(row["id"])
-            all_results.append(dict(row))
-
-    return all_results
+    return cocktail_service.search(db, query)
 
 
 @router.get("/available", response_model=List[Cocktail])
@@ -95,53 +32,16 @@ def get_available_cocktails(
     db: Session = Depends(get_db),
 ):
     ingredient_keys = [
-        normalize_query(i)
+        cocktail_service.normalize_query(i)
         for i in has.split(",")
         if i.strip()
     ]
-    if not ingredient_keys:
-        return []
-
-    placeholders = ", ".join([f":ing{i}" for i in range(len(ingredient_keys))])
-    params = {f"ing{i}": ing for i, ing in enumerate(ingredient_keys)}
-
-    params["ingredient_count"] = len(ingredient_keys)
-    rows = db.execute(
-        text(
-            "SELECT d.id, d.name, d.category, d.alcoholic, d.glass, d.thumb_url "
-            "FROM drinks d "
-            "JOIN drink_ingredients di ON di.drink_id = d.id "
-            "JOIN ingredients i ON i.id = di.ingredient_id "
-            "GROUP BY d.id "
-            "HAVING COUNT(DISTINCT CASE WHEN i.name_key IN (" + placeholders + ") THEN i.name_key END) = :ingredient_count"
-        ),
-        params,
-    ).mappings().all()
-
-    return [dict(row) for row in rows]
+    return cocktail_service.get_available(db, ingredient_keys)
 
 
 @router.get("/random", response_model=Cocktail)
 def get_random_cocktail(db: Session = Depends(get_db)):
-    count = db.execute(text("SELECT COUNT(*) FROM drinks")).scalar()
-    if not count:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No cocktails available",
-        )
-    random_offset = random.randint(0, count - 1)
-    row = db.execute(
-        text(
-            "SELECT id, name, category, alcoholic, glass, thumb_url "
-            "FROM drinks "
-            "LIMIT 1 OFFSET :offset"
-        ),
-        {"offset": random_offset},
-    ).mappings().first()
-    if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No cocktails available",
-        )
-
-    return dict(row)
+    result = cocktail_service.get_random(db)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No cocktails available")
+    return result

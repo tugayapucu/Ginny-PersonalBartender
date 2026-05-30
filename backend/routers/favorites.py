@@ -1,12 +1,11 @@
-# routers/favorites.py
-
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import text
 from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
-import models, schemas
-from auth.dependencies import get_current_user  # This will extract user from token
+import models
+import schemas
+from auth.dependencies import get_current_user
+from services import favorite_service
 
 router = APIRouter(prefix="/favorites", tags=["Favorites"])
 
@@ -15,61 +14,37 @@ router = APIRouter(prefix="/favorites", tags=["Favorites"])
 def add_favorite(
     favorite: schemas.FavoriteCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
-    # Check if already favorited
-    existing = db.query(models.Favorite).filter_by(
-        user_id=current_user.id, cocktail_id=favorite.cocktail_id
-    ).first()
-    if existing:
+    added = favorite_service.add(db, current_user.id, favorite.cocktail_id)
+    if not added:
         raise HTTPException(status_code=400, detail="Already in favorites")
-
-    new_fav = models.Favorite(user_id=current_user.id, cocktail_id=favorite.cocktail_id)
-    db.add(new_fav)
-    db.commit()
     return {"message": "Added to favorites"}
 
 
 @router.get("/")
 def get_favorites(
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
-    favorites = db.query(models.Favorite).filter_by(user_id=current_user.id).all()
-    return [fav.cocktail_id for fav in favorites]
+    return favorite_service.list_ids(db, current_user.id)
 
 
 @router.get("/cocktails", response_model=List[models.Cocktail])
 def get_favorite_cocktails(
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
-    rows = db.execute(
-        text(
-            "SELECT d.id, d.name, d.category, d.alcoholic, d.glass, d.thumb_url "
-            "FROM favorites f "
-            "JOIN drinks d ON d.id = CAST(f.cocktail_id AS INTEGER) "
-            "WHERE f.user_id = :user_id "
-            "ORDER BY f.id DESC"
-        ),
-        {"user_id": current_user.id},
-    ).mappings().all()
-    return [dict(row) for row in rows]
+    return favorite_service.list_cocktails(db, current_user.id)
 
 
 @router.delete("/{cocktail_id}")
 def remove_favorite(
     cocktail_id: str,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
-    fav = db.query(models.Favorite).filter_by(
-        user_id=current_user.id, cocktail_id=cocktail_id
-    ).first()
-
-    if not fav:
+    removed = favorite_service.remove(db, current_user.id, cocktail_id)
+    if not removed:
         raise HTTPException(status_code=404, detail="Favorite not found")
-
-    db.delete(fav)
-    db.commit()
     return {"message": "Removed from favorites"}

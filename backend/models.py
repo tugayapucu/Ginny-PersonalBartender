@@ -1,28 +1,6 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
-
-
-# ---------------------------------------------------------------------------
-# Pydantic response models (used by routers/cocktails.py)
-# ---------------------------------------------------------------------------
-
-class CocktailIngredient(BaseModel):
-    ingredient: str
-    measure: Optional[str] = None
-
-
-class Cocktail(BaseModel):
-    id: int
-    name: str
-    category: Optional[str] = None
-    alcoholic: Optional[str] = None
-    glass: Optional[str] = None
-    instructions: Optional[str] = None
-    thumb_url: Optional[str] = None
-    ingredients: Optional[List[CocktailIngredient]] = None
 
 
 # ---------------------------------------------------------------------------

@@ -4,6 +4,7 @@ from database import get_db
 from auth.dependencies import get_current_user
 import models
 import schemas
+from schemas import MessageResponse
 from services import user_service
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -32,7 +33,7 @@ def update_preferences(
     return user_service.update_preferences(db, current_user, payload.theme)
 
 
-@router.post("/me/password")
+@router.post("/me/password", response_model=MessageResponse)
 def change_password(
     payload: schemas.PasswordChangeRequest,
     db: Session = Depends(get_db),
@@ -42,7 +43,7 @@ def change_password(
     return {"message": "Password updated"}
 
 
-@router.delete("/me")
+@router.delete("/me", response_model=MessageResponse)
 def delete_account(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
@@ -51,7 +52,7 @@ def delete_account(
     return {"message": "Account deleted"}
 
 
-@router.post("/me/disable")
+@router.post("/me/disable", response_model=MessageResponse)
 def disable_account(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),

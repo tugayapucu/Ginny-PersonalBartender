@@ -4,13 +4,14 @@ from typing import List
 from database import get_db
 import models
 import schemas
+from schemas import CocktailSummary, MessageResponse
 from auth.dependencies import get_current_user
 from services import favorite_service
 
 router = APIRouter(prefix="/favorites", tags=["Favorites"])
 
 
-@router.post("/")
+@router.post("/", response_model=MessageResponse)
 def add_favorite(
     favorite: schemas.FavoriteCreate,
     db: Session = Depends(get_db),
@@ -30,7 +31,7 @@ def get_favorites(
     return favorite_service.list_ids(db, current_user.id)
 
 
-@router.get("/cocktails", response_model=List[models.Cocktail])
+@router.get("/cocktails", response_model=List[CocktailSummary])
 def get_favorite_cocktails(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
@@ -38,7 +39,7 @@ def get_favorite_cocktails(
     return favorite_service.list_cocktails(db, current_user.id)
 
 
-@router.delete("/{cocktail_id}")
+@router.delete("/{cocktail_id}", response_model=MessageResponse)
 def remove_favorite(
     cocktail_id: str,
     db: Session = Depends(get_db),

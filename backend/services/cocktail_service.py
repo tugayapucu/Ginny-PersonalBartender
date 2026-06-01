@@ -20,9 +20,16 @@ def normalize_query(value: str) -> str:
     return " ".join(value.strip().split()).lower()
 
 
-def list_cocktails(db: Session) -> List[dict]:
-    drinks = db.query(Drink).limit(50).all()
-    return [_to_summary(d) for d in drinks]
+def list_cocktails(db: Session, page: int = 1, page_size: int = 20) -> dict:
+    total = db.query(Drink).count()
+    offset = (page - 1) * page_size
+    drinks = db.query(Drink).offset(offset).limit(page_size).all()
+    return {
+        "items": [_to_summary(d) for d in drinks],
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+    }
 
 
 def get_by_id(db: Session, id: int) -> Optional[dict]:
@@ -45,31 +52,44 @@ def get_by_id(db: Session, id: int) -> Optional[dict]:
     return result
 
 
-def search(db: Session, query: str) -> List[dict]:
+def search(db: Session, query: str, page: int = 1, page_size: int = 20) -> dict:
     query_like = f"%{normalize_query(query)}%"
 
-    name_matches = (
-        db.query(Drink)
+    name_match_ids = [
+        row.id for row in db.query(Drink.id)
         .filter(func.lower(Drink.name).like(query_like))
         .all()
-    )
+    ]
 
-    ingredient_matches = (
-        db.query(Drink)
+    ingredient_match_ids = [
+        row.id for row in db.query(Drink.id)
         .join(DrinkIngredient, Drink.id == DrinkIngredient.drink_id)
         .join(Ingredient, DrinkIngredient.ingredient_id == Ingredient.id)
         .filter(Ingredient.name_key.like(query_like))
         .distinct()
         .all()
-    )
+    ]
 
-    seen_ids: set = set()
-    results: List[dict] = []
-    for drink in name_matches + ingredient_matches:
-        if drink.id not in seen_ids:
-            seen_ids.add(drink.id)
-            results.append(_to_summary(drink))
-    return results
+    # Deduplicate while preserving name-match priority order
+    seen: set = set()
+    ordered_ids: List[int] = []
+    for id_val in name_match_ids + ingredient_match_ids:
+        if id_val not in seen:
+            seen.add(id_val)
+            ordered_ids.append(id_val)
+
+    total = len(ordered_ids)
+    offset = (page - 1) * page_size
+    page_ids = ordered_ids[offset:offset + page_size]
+
+    if not page_ids:
+        return {"items": [], "page": page, "page_size": page_size, "total": total}
+
+    drinks_by_id = {
+        d.id: d for d in db.query(Drink).filter(Drink.id.in_(page_ids)).all()
+    }
+    items = [_to_summary(drinks_by_id[id_val]) for id_val in page_ids if id_val in drinks_by_id]
+    return {"items": items, "page": page, "page_size": page_size, "total": total}
 
 
 def get_available(db: Session, ingredient_keys: List[str]) -> List[dict]:

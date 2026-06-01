@@ -2,15 +2,19 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
-from schemas import CocktailSummary, CocktailDetail
+from schemas import CocktailSummary, CocktailDetail, PaginatedCocktailResponse
 from services import cocktail_service
 
 router = APIRouter()
 
 
-@router.get("/cocktails", response_model=List[CocktailSummary])
-def get_cocktails(db: Session = Depends(get_db)):
-    return cocktail_service.list_cocktails(db)
+@router.get("/cocktails", response_model=PaginatedCocktailResponse)
+def get_cocktails(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    return cocktail_service.list_cocktails(db, page=page, page_size=page_size)
 
 
 @router.get("/cocktails/{id}", response_model=CocktailDetail)
@@ -21,9 +25,14 @@ def get_cocktail_by_id(id: int, db: Session = Depends(get_db)):
     return result
 
 
-@router.get("/search", response_model=List[CocktailSummary])
-def search_cocktails(query: str = Query(..., min_length=1), db: Session = Depends(get_db)):
-    return cocktail_service.search(db, query)
+@router.get("/search", response_model=PaginatedCocktailResponse)
+def search_cocktails(
+    query: str = Query(..., min_length=1),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    return cocktail_service.search(db, query, page=page, page_size=page_size)
 
 
 @router.get("/available", response_model=List[CocktailSummary])

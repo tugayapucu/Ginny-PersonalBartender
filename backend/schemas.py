@@ -27,6 +27,13 @@ class CocktailDetail(CocktailSummary):
     ingredients: List[CocktailIngredient] = []
 
 
+class PaginatedCocktailResponse(BaseModel):
+    items: List[CocktailSummary]
+    page: int
+    page_size: int
+    total: int
+
+
 # ---------------------------------------------------------------------------
 # Generic response schemas
 # ---------------------------------------------------------------------------

@@ -36,7 +36,7 @@ const CocktailList = () => {
           const res = query.trim()
             ? await searchCocktails(query)
             : await fetchCocktails();
-          setCocktails(res.data);
+          setCocktails(res.data.items);
         } catch (err) {
           console.error("Search error:", err);
         } finally {

@@ -45,7 +45,7 @@ beforeEach(() => {
     addFavorite: vi.fn(),
     removeFavorite: vi.fn(),
   });
-  fetchCocktails.mockResolvedValue({ data: [] });
+  fetchCocktails.mockResolvedValue({ data: { items: [], page: 1, page_size: 100, total: 0 } });
   // No theme in response — keeps handleThemeChange from touching window.matchMedia
   getMeRequest.mockResolvedValue({ data: { username: "", email: "" } });
 });
@@ -129,10 +129,15 @@ describe("ProtectedRoute", () => {
 describe("CocktailList", () => {
   it("renders mocked cocktail cards after data loads", async () => {
     fetchCocktails.mockResolvedValue({
-      data: [
-        { id: 1, name: "Margarita", category: "Classic", thumb_url: null },
-        { id: 2, name: "Mojito", category: "Classic", thumb_url: null },
-      ],
+      data: {
+        items: [
+          { id: 1, name: "Margarita", category: "Classic", thumb_url: null },
+          { id: 2, name: "Mojito", category: "Classic", thumb_url: null },
+        ],
+        page: 1,
+        page_size: 100,
+        total: 2,
+      },
     });
     render(
       <MemoryRouter>

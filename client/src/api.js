@@ -12,9 +12,9 @@ const API = axios.create({
 export const authConfig = (token) =>
   token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-export const fetchCocktails = () => API.get("/cocktails");
+export const fetchCocktails = () => API.get("/cocktails", { params: { page_size: 100 } });
 export const searchCocktails = (query) =>
-  API.get("/search", { params: { query } });
+  API.get("/search", { params: { query, page_size: 100 } });
 export const getRandomCocktail = () => API.get("/random");
 export const getCocktailById = (id) => API.get(`/cocktails/${id}`);
 export const getAvailableCocktails = (ingredients) =>

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from database import get_db
 from schemas import CocktailSummary, CocktailDetail, PaginatedCocktailResponse
 from services import cocktail_service
@@ -12,9 +12,21 @@ router = APIRouter()
 def get_cocktails(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    category: Optional[str] = Query(None, description="Filter by category (case-insensitive)"),
+    alcoholic: Optional[str] = Query(None, description="Filter by alcoholic value, e.g. 'Alcoholic'"),
+    glass: Optional[str] = Query(None, description="Filter by glass type (case-insensitive)"),
+    ingredient: Optional[str] = Query(None, description="Filter by ingredient name_key (case-insensitive)"),
     db: Session = Depends(get_db),
 ):
-    return cocktail_service.list_cocktails(db, page=page, page_size=page_size)
+    return cocktail_service.list_cocktails(
+        db,
+        page=page,
+        page_size=page_size,
+        category=category,
+        alcoholic=alcoholic,
+        glass=glass,
+        ingredient=ingredient,
+    )
 
 
 @router.get("/cocktails/{id}", response_model=CocktailDetail)

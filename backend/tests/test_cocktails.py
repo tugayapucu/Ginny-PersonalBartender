@@ -149,6 +149,96 @@ def test_search_total_is_accurate(client):
 
 
 # ---------------------------------------------------------------------------
+# GET /cocktails — filters
+# Seeded data:
+#   1001 Test Margarita   category=Ordinary Drink  glass=Cocktail glass   ingredients: tequila, lime juice
+#   1002 Test Vodka Soda  category=Ordinary Drink  glass=Highball glass   ingredients: vodka
+# ---------------------------------------------------------------------------
+
+def test_filter_by_category_matches_both(client):
+    r = client.get("/cocktails", params={"category": "Ordinary Drink"})
+    assert r.status_code == 200
+    assert r.json()["total"] == 2
+
+
+def test_filter_by_category_case_insensitive(client):
+    r = client.get("/cocktails", params={"category": "ordinary drink"})
+    assert r.status_code == 200
+    assert r.json()["total"] == 2
+
+
+def test_filter_by_glass_narrows_results(client):
+    r = client.get("/cocktails", params={"glass": "Cocktail glass"})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Margarita" in names
+    assert "Test Vodka Soda" not in names
+
+
+def test_filter_by_glass_highball(client):
+    r = client.get("/cocktails", params={"glass": "Highball glass"})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Vodka Soda" in names
+    assert "Test Margarita" not in names
+
+
+def test_filter_by_alcoholic_matches_both(client):
+    r = client.get("/cocktails", params={"alcoholic": "Alcoholic"})
+    assert r.status_code == 200
+    assert r.json()["total"] == 2
+
+
+def test_filter_by_ingredient_tequila(client):
+    r = client.get("/cocktails", params={"ingredient": "tequila"})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Margarita" in names
+    assert "Test Vodka Soda" not in names
+
+
+def test_filter_by_ingredient_vodka(client):
+    r = client.get("/cocktails", params={"ingredient": "vodka"})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Vodka Soda" in names
+    assert "Test Margarita" not in names
+
+
+def test_filter_no_match_returns_empty(client):
+    r = client.get("/cocktails", params={"category": "Nonexistent Category"})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total"] == 0
+    assert body["items"] == []
+
+
+def test_combined_filters_category_and_glass(client):
+    r = client.get("/cocktails", params={"category": "Ordinary Drink", "glass": "Highball glass"})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Vodka Soda" in names
+    assert "Test Margarita" not in names
+
+
+def test_combined_filters_category_and_ingredient(client):
+    r = client.get("/cocktails", params={"category": "Ordinary Drink", "ingredient": "tequila"})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Margarita" in names
+    assert "Test Vodka Soda" not in names
+
+
+def test_filters_work_with_pagination(client):
+    # Both drinks match category filter; page_size=1 returns 1 item but total stays 2
+    r = client.get("/cocktails", params={"category": "Ordinary Drink", "page_size": 1})
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body["items"]) == 1
+    assert body["total"] == 2
+
+
+# ---------------------------------------------------------------------------
 # GET /available
 # ---------------------------------------------------------------------------
 

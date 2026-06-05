@@ -20,10 +20,36 @@ def normalize_query(value: str) -> str:
     return " ".join(value.strip().split()).lower()
 
 
-def list_cocktails(db: Session, page: int = 1, page_size: int = 20) -> dict:
-    total = db.query(Drink).count()
+def list_cocktails(
+    db: Session,
+    page: int = 1,
+    page_size: int = 20,
+    category: Optional[str] = None,
+    alcoholic: Optional[str] = None,
+    glass: Optional[str] = None,
+    ingredient: Optional[str] = None,
+) -> dict:
+    q = db.query(Drink)
+
+    if category:
+        q = q.filter(func.lower(Drink.category) == category.strip().lower())
+    if alcoholic:
+        q = q.filter(func.lower(Drink.alcoholic) == alcoholic.strip().lower())
+    if glass:
+        q = q.filter(func.lower(Drink.glass) == glass.strip().lower())
+    if ingredient:
+        norm = normalize_query(ingredient)
+        q = (
+            q.join(DrinkIngredient, Drink.id == DrinkIngredient.drink_id)
+             .join(Ingredient, DrinkIngredient.ingredient_id == Ingredient.id)
+             .filter(Ingredient.name_key == norm)
+        )
+
+    # count(distinct Drink.id) handles potential duplicate rows from ingredient join
+    total = q.with_entities(func.count(distinct(Drink.id))).scalar()
     offset = (page - 1) * page_size
-    drinks = db.query(Drink).offset(offset).limit(page_size).all()
+    drinks = q.distinct().order_by(Drink.id).offset(offset).limit(page_size).all()
+
     return {
         "items": [_to_summary(d) for d in drinks],
         "page": page,

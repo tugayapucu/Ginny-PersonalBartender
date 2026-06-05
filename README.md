@@ -113,15 +113,40 @@ backend/
 
 Interactive docs are available at `http://127.0.0.1:8000/docs` when the backend is running.
 
+All routes are available under the canonical `/api/v1` prefix (e.g. `/api/v1/cocktails`) and temporarily also at their legacy unversioned paths for backward compatibility.
+
 ### Cocktails
 
 | Method | Path | Description | Auth |
 |---|---|---|---|
-| `GET` | `/cocktails` | List first 50 cocktails (summary) | — |
-| `GET` | `/cocktails/{id}` | Full cocktail detail with ingredients | — |
-| `GET` | `/search?q=` | Fuzzy search by name or ingredient | — |
-| `GET` | `/available?ingredients=` | Cocktails you can make from your pantry | — |
-| `GET` | `/random` | One random cocktail | — |
+| `GET` | `/api/v1/cocktails` | Paginated cocktail list with optional filters | — |
+| `GET` | `/api/v1/cocktails/{id}` | Full cocktail detail with ingredients | — |
+| `GET` | `/api/v1/search?query=` | Paginated fuzzy search by name or ingredient | — |
+| `GET` | `/api/v1/available?has=` | Cocktails makeable from a comma-separated pantry list | — |
+| `GET` | `/api/v1/random` | One random cocktail | — |
+
+**Pagination params** (on `/cocktails` and `/search`):
+
+| Param | Default | Constraints | Description |
+|---|---|---|---|
+| `page` | `1` | ≥ 1 | Page number |
+| `page_size` | `20` | 1 – 100 | Items per page |
+
+Paginated responses have the shape:
+```json
+{ "items": [...], "page": 1, "page_size": 20, "total": 636 }
+```
+
+**Filter params** (on `/cocktails` only, all optional, combined with AND):
+
+| Param | Example | Description |
+|---|---|---|
+| `category` | `Ordinary Drink` | Filter by cocktail category (case-insensitive) |
+| `alcoholic` | `Alcoholic` | Filter by alcoholic value (case-insensitive) |
+| `glass` | `Cocktail glass` | Filter by glass type (case-insensitive) |
+| `ingredient` | `tequila` | Filter by ingredient name (case-insensitive) |
+
+> **`/available` vs `ingredient` filter:** `/available?has=tequila,lime juice` answers "what can I make with what I have?" — it finds cocktails that contain *all* listed ingredients. The `ingredient` filter on `/cocktails` is a simpler single-ingredient narrowing filter that works alongside pagination. Both are intentionally kept.
 
 ### Auth
 

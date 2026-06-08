@@ -91,21 +91,29 @@ client/                      # React SPA (Vite)
 │
 backend/
 │
-├── main.py                  # FastAPI app, CORS, router registration
+├── main.py                  # FastAPI app, CORS, logging middleware, router registration
 ├── database.py              # SQLAlchemy engine + get_db() dependency
-├── models.py                # SQLAlchemy User & Favourite ORM models; Pydantic Cocktail model
-├── schemas.py               # Request/response Pydantic schemas
+├── models.py                # SQLAlchemy ORM models (Drink, Ingredient, DrinkIngredient, User, Favourite)
+├── schemas.py               # All Pydantic request/response schemas (CocktailSummary, CocktailDetail, ...)
 ├── security.py              # bcrypt helpers, JWT creation/validation, password-strength regex
 ├── settings.py              # Environment-variable config (secret key, CORS origins, token TTL)
+├── logging_config.py        # Python logging setup (structured key=value format, stdout)
+├── services/
+│   ├── cocktail_service.py  # List, detail, search, available, random — ORM queries, pagination, filters
+│   ├── favorite_service.py  # Add, list IDs, list cocktails, remove
+│   ├── user_service.py      # Profile read/update, password change, disable, delete
+│   └── auth_service.py      # Register (with password strength check) + login
 ├── routers/
-│   ├── cocktails.py         # Read-only cocktail endpoints (browse, search, available, random)
-│   ├── auth/routes.py       # Register + login
-│   ├── users.py             # Profile, password, preferences, account management
-│   └── favorites.py         # Add, list, bulk-fetch, remove favourites
+│   ├── cocktails.py         # Thin router: parse params → call cocktail_service → return schema
+│   ├── auth/routes.py       # Thin router: delegate to auth_service
+│   ├── users.py             # Thin router: delegate to user_service
+│   └── favorites.py         # Thin router: delegate to favorite_service
 └── alembic/                 # Migration history (users + favourites tables)
 ```
 
-**Data model note:** The cocktail catalogue (drinks, ingredients, drink_ingredients) lives in a pre-seeded SQLite file and is queried with raw SQLAlchemy `text()` calls. User and favourites tables are created and managed by Alembic so the schema can evolve independently.
+**Service layer:** Business logic (query building, pagination, filter composition, auth rules) lives in `backend/services/`. Routers are intentionally thin — they parse request params, call a service function, and return the result against a Pydantic response schema. This keeps route handlers readable and makes logic independently testable.
+
+**Data model note:** The cocktail catalogue (drinks, ingredients, drink_ingredients) lives in a pre-seeded SQLite file and is queried via SQLAlchemy ORM models. User and favourites tables are created and managed by Alembic so the schema can evolve independently.
 
 ---
 
@@ -152,28 +160,69 @@ Paginated responses have the shape:
 
 | Method | Path | Description | Auth |
 |---|---|---|---|
-| `POST` | `/auth/register` | Create account | — |
-| `POST` | `/auth/login` | Obtain JWT token | — |
+| `POST` | `/api/v1/auth/register` | Create account | — |
+| `POST` | `/api/v1/auth/login` | Obtain JWT token | — |
 
 ### User profile
 
 | Method | Path | Description | Auth |
 |---|---|---|---|
-| `GET` | `/users/me` | Current user profile | Bearer |
-| `PATCH` | `/users/me` | Update username / email | Bearer |
-| `PATCH` | `/users/me/preferences` | Update theme | Bearer |
-| `POST` | `/users/me/password` | Change password | Bearer |
-| `POST` | `/users/me/disable` | Disable account | Bearer |
-| `DELETE` | `/users/me` | Delete account | Bearer |
+| `GET` | `/api/v1/users/me` | Current user profile | Bearer |
+| `PATCH` | `/api/v1/users/me` | Update username / email | Bearer |
+| `PATCH` | `/api/v1/users/me/preferences` | Update theme | Bearer |
+| `POST` | `/api/v1/users/me/password` | Change password | Bearer |
+| `POST` | `/api/v1/users/me/disable` | Disable account | Bearer |
+| `DELETE` | `/api/v1/users/me` | Delete account | Bearer |
 
 ### Favourites
 
 | Method | Path | Description | Auth |
 |---|---|---|---|
-| `POST` | `/favorites/` | Add cocktail to favourites | Bearer |
-| `GET` | `/favorites/` | List favourite cocktail IDs | Bearer |
-| `GET` | `/favorites/cocktails` | Full cocktail objects for favourites | Bearer |
-| `DELETE` | `/favorites/{cocktail_id}` | Remove from favourites | Bearer |
+| `POST` | `/api/v1/favorites/` | Add cocktail to favourites | Bearer |
+| `GET` | `/api/v1/favorites/` | List favourite cocktail IDs | Bearer |
+| `GET` | `/api/v1/favorites/cocktails` | Full cocktail objects for favourites | Bearer |
+| `DELETE` | `/api/v1/favorites/{cocktail_id}` | Remove from favourites | Bearer |
+
+### Example requests
+
+```bash
+# Browse cocktails (page 2, 10 per page, filtered by glass type)
+curl "http://127.0.0.1:8000/api/v1/cocktails?page=2&page_size=10&glass=Cocktail+glass"
+
+# Search by name or ingredient
+curl "http://127.0.0.1:8000/api/v1/search?query=margarita"
+
+# What can I make with tequila and lime juice?
+curl "http://127.0.0.1:8000/api/v1/available?has=tequila,lime+juice"
+
+# Register then log in
+curl -X POST http://127.0.0.1:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"alice","email":"alice@example.com","password":"Secure1!Pass"}'
+
+curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"alice@example.com","password":"Secure1!Pass"}'
+# → {"access_token": "eyJ...", "token_type": "bearer"}
+
+# Get your profile (replace TOKEN with the access_token from login)
+curl http://127.0.0.1:8000/api/v1/users/me \
+  -H "Authorization: Bearer TOKEN"
+```
+
+### Logging
+
+The backend emits structured key=value logs to stdout on every request:
+
+```
+2025-06-06T12:34:56 level=INFO logger=ginny.request method=GET path=/api/v1/cocktails status=200 duration_ms=14
+2025-06-06T12:34:57 level=WARNING logger=ginny.request method=GET path=/api/v1/cocktails/9999 status=404 duration_ms=3
+```
+
+- 4xx and 5xx responses log at `WARNING`; everything else at `INFO`.
+- Authorization headers, request bodies, passwords, and tokens are never logged.
+- `uvicorn` and `sqlalchemy.engine` access logs are suppressed to avoid duplicating request lines.
+- Database errors in `/health` are logged at `ERROR` but the API response only returns a generic `"database": "unavailable"` message.
 
 ---
 
@@ -311,12 +360,15 @@ npx playwright install chromium
 
 ### What is tested
 
-**Backend — 31 pytest tests** (`backend/tests/`)
+**Backend — 83 pytest tests** (`backend/tests/`)
 
 - `test_smoke.py` — API reachable, seeded data queryable, test DB isolated from production
 - `test_auth.py` — registration (success, duplicate email/username, weak password), login (success, wrong password, nonexistent email, disabled account)
+- `test_cocktails.py` — list (pagination metadata, custom page_size, invalid params → 422), detail (with ingredients), search, available, random; all four filters individually, combined filters, pagination + filters
 - `test_favorites.py` — unauthenticated rejection, add/duplicate/list/remove CRUD, full cocktail detail via `/favorites/cocktails`, cross-user isolation
 - `test_users.py` — `GET /users/me`, profile update, duplicate username, theme preference, password change, disable, delete
+- `test_logging.py` — logging middleware does not break health, cocktail list, or 404 responses
+- `test_api_v1.py` — all route groups smoke-tested under `/api/v1` prefix (cocktails, auth, favorites, users)
 
 All backend tests use an **in-memory SQLite database** — they never read or write `backend/ginny_database.db`.
 
@@ -342,14 +394,12 @@ Completed features are listed under [Features](#features). Everything below is p
 
 ### Backend improvements
 
-- [ ] **Pagination** — add `limit` / `offset` query parameters to `GET /cocktails` and `GET /search`; return a `total` count so the frontend can render page controls
-- [ ] **Advanced filtering** — filter cocktails by category (e.g. "Ordinary Drink", "Shot") and alcoholic/non-alcoholic flag using existing database columns
 - [ ] **Input validation tightening** — enforce max lengths on username and email in Pydantic schemas; return consistent `422` error shapes for all invalid inputs
 - [ ] **Refresh tokens** — issue a short-lived access token and a longer-lived refresh token so users are not logged out every hour
+- [ ] **Pagination UI** — expose the paginated API in the frontend with a "Load more" button or infinite scroll on the recipe grid
 
 ### Frontend improvements
 
-- [ ] **Search pagination / infinite scroll** — consume the paginated API and render a "Load more" button or infinite scroll in `CocktailList`
 - [ ] **Skeleton loading states** — replace plain text loading indicators with Tailwind skeleton placeholders on the recipe grid, cocktail detail, and favourites pages
 - [ ] **Toast notifications** — replace inline success/error messages in Settings with a non-blocking toast component
 - [ ] **Empty state illustrations** — add a friendly empty state to the Favourites page when the user has not saved anything yet
@@ -375,9 +425,11 @@ Completed features are listed under [Features](#features). Everything below is p
 
 Ginny was built as a realistic full-stack application to show practical backend and frontend engineering skills in a single, cohesive codebase. It is not a tutorial clone — every layer was designed and wired together from scratch.
 
-### REST API design
+### REST API design and service layer
 
-The FastAPI backend is split into four routers (`cocktails`, `auth`, `users`, `favorites`), each with a single responsibility. Endpoints follow REST conventions — correct HTTP verbs, meaningful status codes, and Pydantic schemas for both request validation and response shaping. The interactive Swagger UI at `/docs` is available out of the box.
+The FastAPI backend follows a thin-router / service-layer pattern. Four routers (`cocktails`, `auth`, `users`, `favorites`) handle request parsing, dependency injection, and response serialisation. Business logic — query building, pagination, filter composition, auth rule enforcement — lives in a dedicated `services/` package, keeping route handlers readable and testable in isolation.
+
+Endpoints follow REST conventions: correct HTTP verbs, meaningful status codes, and Pydantic schemas for both request validation and response shaping. All routes are available under the canonical `/api/v1` prefix with Swagger UI at `/docs`.
 
 ### Authentication and authorisation
 

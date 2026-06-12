@@ -36,11 +36,10 @@ class Ingredient(Base):
 class DrinkIngredient(Base):
     __tablename__ = "drink_ingredients"
 
-    id = Column(Integer, primary_key=True, index=True)
-    drink_id = Column(Integer, ForeignKey("drinks.id"), nullable=False)
+    drink_id = Column(Integer, ForeignKey("drinks.id"), primary_key=True, nullable=False)
+    position = Column(Integer, primary_key=True, nullable=False, default=0)
     ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
     measure = Column(String, nullable=True)
-    position = Column(Integer, nullable=False, default=0)
 
     drink = relationship("Drink", back_populates="drink_ingredients")
     ingredient = relationship("Ingredient", back_populates="drink_ingredients")

@@ -89,3 +89,18 @@ class PasswordChangeRequest(BaseModel):
 
 class UserPreferencesUpdate(BaseModel):
     theme: Literal["light", "dark", "system"]
+
+
+# ---------------------------------------------------------------------------
+# Pantry schemas
+# ---------------------------------------------------------------------------
+
+class PantryItemCreate(BaseModel):
+    ingredient_name: str
+
+
+class PantryItemResponse(BaseModel):
+    id: int
+    ingredient_name: str
+    ingredient_key: str
+    ingredient_id: Optional[int] = None

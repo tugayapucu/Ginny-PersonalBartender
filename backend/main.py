@@ -5,8 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from routers import cocktails
 from routers import users
-from auth.routes import router as auth_router
 from routers import favorites
+from routers import pantry
+from auth.routes import router as auth_router
 from settings import CORS_ALLOWED_ORIGINS
 from database import engine
 from logging_config import setup_logging
@@ -78,6 +79,7 @@ v1.include_router(cocktails.router)
 v1.include_router(auth_router)
 v1.include_router(favorites.router)
 v1.include_router(users.router)
+v1.include_router(pantry.router)
 app.include_router(v1)
 
 # Backward-compatibility routes — kept so existing frontend and tests continue
@@ -86,3 +88,4 @@ app.include_router(cocktails.router)
 app.include_router(auth_router)
 app.include_router(favorites.router)
 app.include_router(users.router)
+app.include_router(pantry.router)

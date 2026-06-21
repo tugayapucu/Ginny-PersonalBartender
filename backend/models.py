@@ -1,4 +1,5 @@
-from sqlalchemy import Boolean, Column, Integer, String, ForeignKey
+import datetime
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -60,6 +61,7 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     favorites = relationship("Favorite", back_populates="user", cascade="all, delete")
+    pantry_items = relationship("UserPantryItem", back_populates="user", cascade="all, delete")
 
 
 class Favorite(Base):
@@ -70,3 +72,20 @@ class Favorite(Base):
     cocktail_id = Column(String, nullable=False)
 
     user = relationship("User", back_populates="favorites")
+
+
+class UserPantryItem(Base):
+    __tablename__ = "user_pantry_items"
+    __table_args__ = (
+        UniqueConstraint("user_id", "ingredient_key", name="uq_pantry_user_ingredient"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=True)
+    ingredient_name = Column(String, nullable=False)
+    ingredient_key = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    user = relationship("User", back_populates="pantry_items")
+    ingredient = relationship("Ingredient")

@@ -41,4 +41,11 @@ export const deleteAccountRequest = (token) =>
 export const disableAccountRequest = (token) =>
   API.post("/users/me/disable", {}, authConfig(token));
 
+export const getPantryRequest = (token) =>
+  API.get("/api/v1/pantry/", authConfig(token));
+export const addPantryItemRequest = (token, ingredientName) =>
+  API.post("/api/v1/pantry/", { ingredient_name: ingredientName }, authConfig(token));
+export const removePantryItemRequest = (token, ingredientKey) =>
+  API.delete(`/api/v1/pantry/${encodeURIComponent(ingredientKey)}`, authConfig(token));
+
 export default API;

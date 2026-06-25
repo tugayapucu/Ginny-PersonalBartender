@@ -10,6 +10,7 @@ import Settings from "./pages/Settings";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import CocktailOfTheDay from "./pages/CocktailOfTheDay";
+import Pantry from "./pages/Pantry";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -73,6 +74,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Favorites />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pantry"
+            element={
+              <ProtectedRoute>
+                <Pantry />
               </ProtectedRoute>
             }
           />

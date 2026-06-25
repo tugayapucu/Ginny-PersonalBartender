@@ -26,6 +26,7 @@ const Navbar = () => {
           </>
         ) : (
           <>
+            <Link to="/pantry">My Pantry</Link>
             <Link to="/settings">Settings</Link>
             <button onClick={handleLogout} className="hover:underline">
               Logout

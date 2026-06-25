@@ -17,11 +17,14 @@ vi.mock("../api", () => ({
   updatePreferencesRequest: vi.fn(),
   deleteAccountRequest: vi.fn(),
   disableAccountRequest: vi.fn(),
+  getPantryRequest: vi.fn(),
+  addPantryItemRequest: vi.fn(),
+  removePantryItemRequest: vi.fn(),
 }));
 
 import useAuth from "../hooks/useAuth";
 import useFavorites from "../hooks/useFavorites";
-import { fetchCocktails, getMeRequest } from "../api";
+import { fetchCocktails, getMeRequest, getPantryRequest } from "../api";
 
 import Navbar from "../components/Navbar";
 import Login from "../pages/Login";
@@ -29,6 +32,7 @@ import Register from "../pages/Register";
 import ProtectedRoute from "../components/ProtectedRoute";
 import CocktailList from "../components/CocktailList";
 import Settings from "../pages/Settings";
+import Pantry from "../pages/Pantry";
 
 // Default unauthenticated state — individual tests override as needed
 beforeEach(() => {
@@ -149,6 +153,68 @@ describe("CocktailList", () => {
       expect(screen.getByText("Margarita")).toBeInTheDocument();
       expect(screen.getByText("Mojito")).toBeInTheDocument();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Pantry
+// ---------------------------------------------------------------------------
+describe("Pantry page", () => {
+  it("renders heading, add form, and empty state when pantry is empty", async () => {
+    useAuth.mockReturnValue({
+      authStatus: "authenticated",
+      isAuthenticated: true,
+      authError: "",
+      token: "fake-token",
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    getPantryRequest.mockResolvedValue({ data: [] });
+
+    render(
+      <MemoryRouter>
+        <Pantry />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole("heading", { name: /my pantry/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/ingredient/i)).toBeInTheDocument();
+    expect(screen.getByTestId("pantry-add-btn")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("pantry-empty")).toBeInTheDocument();
+    });
+  });
+
+  it("renders saved pantry items after load", async () => {
+    useAuth.mockReturnValue({
+      authStatus: "authenticated",
+      isAuthenticated: true,
+      authError: "",
+      token: "fake-token",
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    getPantryRequest.mockResolvedValue({
+      data: [
+        { id: 1, ingredient_name: "Tequila", ingredient_key: "tequila", ingredient_id: 1 },
+        { id: 2, ingredient_name: "Lime Juice", ingredient_key: "lime juice", ingredient_id: 2 },
+      ],
+    });
+
+    render(
+      <MemoryRouter>
+        <Pantry />
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId("pantry-list")).toBeInTheDocument();
+      expect(screen.getAllByTestId("pantry-item")).toHaveLength(2);
+    });
+
+    expect(screen.getByText("Tequila")).toBeInTheDocument();
+    expect(screen.getByText("Lime Juice")).toBeInTheDocument();
   });
 });
 

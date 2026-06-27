@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { motion as Motion } from "motion/react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { registerRequest } from "../api";
 
 const Register = () => {
@@ -36,50 +38,93 @@ const Register = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-4 text-center">Create an Account</h2>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          required
-          className="border rounded px-4 py-2"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="border rounded px-4 py-2"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          onBlur={() => setPasswordTouched(true)}
-          required
-          className="border rounded px-4 py-2"
-        />
-        {(passwordTouched || formData.password.length > 0) && (
-          <p className={`text-xs ${isPasswordValid ? "text-green-600" : "text-red-500"}`}>
-            {isPasswordValid ? "Strong password" : passwordRule}
-          </p>
-        )}
-        <button
-          type="submit"
-          className="bg-green-600 text-white py-2 rounded hover:bg-green-700"
-        >
-          Register
-        </button>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-      </form>
+    <div className="flex min-h-[80dvh] items-center justify-center px-5 py-12">
+      <Motion.form
+        onSubmit={handleSubmit}
+        className="card w-full max-w-md p-8"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <p className="eyebrow mb-3 text-center">Join the bar</p>
+        <h2 className="mb-6 text-center text-3xl">Create an account</h2>
+
+        <div className="flex flex-col gap-4">
+          <div>
+            <label htmlFor="reg-username" className="field-label">Username</label>
+            <input
+              id="reg-username"
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+              className="input"
+            />
+          </div>
+          <div>
+            <label htmlFor="reg-email" className="field-label">Email</label>
+            <input
+              id="reg-email"
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="input"
+            />
+          </div>
+          <div>
+            <label htmlFor="reg-password" className="field-label">Password</label>
+            <input
+              id="reg-password"
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              onBlur={() => setPasswordTouched(true)}
+              required
+              className="input"
+            />
+            {(passwordTouched || formData.password.length > 0) && (
+              <p
+                className={`mt-2 flex items-center gap-1.5 text-xs ${
+                  isPasswordValid ? "text-success" : "text-muted"
+                }`}
+              >
+                {isPasswordValid ? (
+                  <>
+                    <CheckIcon size={14} weight="bold" aria-hidden="true" />
+                    Strong password
+                  </>
+                ) : (
+                  passwordRule
+                )}
+              </p>
+            )}
+          </div>
+
+          <button type="submit" className="btn-primary w-full">
+            Register
+          </button>
+
+          {error && (
+            <p className="rounded-lg border border-danger/40 bg-danger/10 px-4 py-2.5 text-center text-sm text-danger">
+              {error}
+            </p>
+          )}
+        </div>
+
+        <p className="mt-6 text-center text-sm text-muted">
+          Already have an account?{" "}
+          <Link to="/login" className="text-accent hover:underline">
+            Log in
+          </Link>
+        </p>
+      </Motion.form>
     </div>
   );
 };

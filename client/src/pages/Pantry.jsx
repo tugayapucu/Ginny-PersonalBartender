@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { XIcon } from "@phosphor-icons/react";
 import useAuth from "../hooks/useAuth";
 import { getPantryRequest, addPantryItemRequest, removePantryItemRequest } from "../api";
+import { Reveal } from "../lib/motion";
 
 const Pantry = () => {
   const { token } = useAuth();
@@ -49,98 +51,89 @@ const Pantry = () => {
   };
 
   return (
-    <div className="min-h-screen py-10 px-4">
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-3xl font-bold mb-2 text-center">My Pantry</h2>
-        <p className="text-center text-gray-500 mb-8">
-          Save the ingredients you have on hand — they'll be used to find cocktails you can make.
-        </p>
-
-        {/* Add form */}
-        <form
-          onSubmit={handleAdd}
-          className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg p-6 mb-6 border border-gray-200"
-        >
-          <div className="flex gap-3 items-end">
-            <div className="flex-1">
-              <label
-                htmlFor="pantry-ingredient-input"
-                className="block text-gray-700 text-sm font-medium mb-2"
-              >
-                Ingredient
-              </label>
-              <input
-                id="pantry-ingredient-input"
-                data-testid="pantry-input"
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="e.g. Tequila, Lime Juice…"
-                className="shadow border rounded w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-400"
-              />
-            </div>
-            <button
-              type="submit"
-              data-testid="pantry-add-btn"
-              className="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-5 rounded transition-colors"
-            >
-              Add
-            </button>
-          </div>
-        </form>
-
-        {/* Error */}
-        {error && (
-          <p
-            data-testid="pantry-error"
-            className="text-red-500 text-center mb-4"
-          >
-            {error}
-          </p>
-        )}
-
-        {/* Loading */}
-        {loading && (
-          <p data-testid="pantry-loading" className="text-center text-gray-400">
-            Loading your pantry…
-          </p>
-        )}
-
-        {/* Empty */}
-        {!loading && items.length === 0 && (
-          <p
-            data-testid="pantry-empty"
-            className="text-center text-gray-400 mt-4"
-          >
-            Your pantry is empty — add an ingredient above to get started.
-          </p>
-        )}
-
-        {/* Ingredient list */}
-        {!loading && items.length > 0 && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 divide-y divide-gray-100">
-            <ul data-testid="pantry-list">
-              {items.map((item) => (
-                <li
-                  key={item.id}
-                  data-testid="pantry-item"
-                  className="flex items-center justify-between px-6 py-3"
-                >
-                  <span className="text-gray-800 capitalize">{item.ingredient_name}</span>
-                  <button
-                    aria-label={`Remove ${item.ingredient_name} from pantry`}
-                    data-testid="pantry-remove-btn"
-                    onClick={() => handleRemove(item.ingredient_key, item.ingredient_name)}
-                    className="text-red-400 hover:text-red-600 font-bold text-lg leading-none transition-colors"
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+    <div className="mx-auto max-w-2xl px-5 py-12">
+      <div className="mb-8">
+        <Reveal as="p" className="eyebrow mb-3">Your ingredients</Reveal>
+        <Reveal as="h1" delay={0.05} className="text-4xl md:text-5xl">My Pantry</Reveal>
+        <Reveal as="p" delay={0.1} className="mt-3 text-muted">
+          Save the ingredients you have on hand — they'll be used to find
+          cocktails you can make.
+        </Reveal>
       </div>
+
+      <form onSubmit={handleAdd} className="card p-6">
+        <div className="flex items-end gap-3">
+          <div className="flex-1">
+            <label htmlFor="pantry-ingredient-input" className="field-label">
+              Ingredient
+            </label>
+            <input
+              id="pantry-ingredient-input"
+              data-testid="pantry-input"
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="e.g. Tequila, Lime juice…"
+              className="input"
+            />
+          </div>
+          <button
+            type="submit"
+            data-testid="pantry-add-btn"
+            className="btn-primary"
+          >
+            Add
+          </button>
+        </div>
+      </form>
+
+      {error && (
+        <p
+          data-testid="pantry-error"
+          className="mt-4 rounded-lg border border-danger/40 bg-danger/10 px-4 py-2.5 text-center text-sm text-danger"
+        >
+          {error}
+        </p>
+      )}
+
+      {loading && (
+        <p data-testid="pantry-loading" className="mt-6 text-center text-muted">
+          Loading your pantry…
+        </p>
+      )}
+
+      {!loading && items.length === 0 && (
+        <p
+          data-testid="pantry-empty"
+          className="mt-6 text-center text-muted"
+        >
+          Your pantry is empty — add an ingredient above to get started.
+        </p>
+      )}
+
+      {!loading && items.length > 0 && (
+        <div className="card mt-6 divide-y divide-line">
+          <ul data-testid="pantry-list">
+            {items.map((item) => (
+              <li
+                key={item.id}
+                data-testid="pantry-item"
+                className="flex items-center justify-between px-6 py-3.5"
+              >
+                <span className="capitalize">{item.ingredient_name}</span>
+                <button
+                  aria-label={`Remove ${item.ingredient_name} from pantry`}
+                  data-testid="pantry-remove-btn"
+                  onClick={() => handleRemove(item.ingredient_key, item.ingredient_name)}
+                  className="leading-none text-muted transition-colors hover:text-danger"
+                >
+                  <XIcon size={16} weight="bold" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };

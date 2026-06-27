@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion as Motion } from "motion/react";
 import useAuth from '../hooks/useAuth';
 import { loginRequest } from "../api";
 
@@ -8,36 +9,43 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth(); // ✅ use our modular login handler
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     try {
-      const res = await loginRequest({
-        email,
-        password,
-      });
-      login(res.data.access_token); // ✅ use the hook instead of localStorage directly
-      navigate('/'); // Redirect after login
+      const res = await loginRequest({ email, password });
+      login(res.data.access_token);
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.detail || 'Login failed');
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form
+    <div className="flex min-h-[80dvh] items-center justify-center px-5 py-12">
+      <Motion.form
         onSubmit={handleLogin}
-        className="bg-white shadow-md rounded px-8 pt-6 pb-8 w-full max-w-md"
+        className="card w-full max-w-md p-8"
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-        {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+        <p className="eyebrow mb-3 text-center">Welcome back</p>
+        <h2 className="mb-6 text-center text-3xl">Login</h2>
+
+        {error && (
+          <p className="mb-4 rounded-lg border border-danger/40 bg-danger/10 px-4 py-2.5 text-center text-sm text-danger">
+            {error}
+          </p>
+        )}
+
         <div className="mb-4">
-          <label htmlFor="email" className="block text-gray-700 text-sm mb-2">Email</label>
+          <label htmlFor="email" className="field-label">Email</label>
           <input
             id="email"
-            className="shadow border rounded w-full py-2 px-3 text-gray-700"
+            className="input"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -45,23 +53,28 @@ const Login = () => {
           />
         </div>
         <div className="mb-6">
-          <label htmlFor="password" className="block text-gray-700 text-sm mb-2">Password</label>
+          <label htmlFor="password" className="field-label">Password</label>
           <input
             id="password"
-            className="shadow border rounded w-full py-2 px-3 text-gray-700"
+            className="input"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </div>
-        <button
-          type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full"
-        >
-          Log In
+
+        <button type="submit" className="btn-primary w-full">
+          Log in
         </button>
-      </form>
+
+        <p className="mt-6 text-center text-sm text-muted">
+          New here?{" "}
+          <Link to="/register" className="text-accent hover:underline">
+            Create an account
+          </Link>
+        </p>
+      </Motion.form>
     </div>
   );
 };

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { MartiniIcon, XIcon } from "@phosphor-icons/react";
 import useAuth from '../hooks/useAuth'
 import useFavorites from '../hooks/useFavorites'
 import { getFavoriteCocktailsRequest } from "../api";
+import { Reveal, Stagger } from "../lib/motion";
 
 const Favorites = () => {
   const [cocktails, setCocktails] = useState([])
@@ -27,30 +29,54 @@ const Favorites = () => {
   }, [favorites, token])
 
   return (
-    <div className="px-6 py-10 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold text-center mb-8">❤️ My Favorite Cocktails</h2>
+    <div className="mx-auto max-w-6xl px-5 py-12">
+      <div className="mb-10">
+        <Reveal as="p" className="eyebrow mb-3">Your collection</Reveal>
+        <Reveal as="h1" delay={0.05} className="text-4xl md:text-5xl">Favorite cocktails</Reveal>
+      </div>
+
       {cocktails.length === 0 ? (
-        <p className="text-center text-gray-500">No favorites yet.</p>
+        <div className="card mx-auto max-w-md p-10 text-center">
+          <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-accent-soft">
+            <MartiniIcon size={30} weight="duotone" className="text-accent" aria-hidden="true" />
+          </div>
+          <h2 className="mb-2 text-2xl">No favorites yet.</h2>
+          <p className="mb-6 text-muted">
+            Tap the heart on any cocktail to save it here for later.
+          </p>
+          <Link to="/recipes" className="btn-primary">
+            Browse recipes
+          </Link>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {cocktails.map((cocktail) => (
-            <div key={cocktail.id} data-testid="favorite-card" className="border rounded-xl shadow p-4 text-center relative">
-              <Link to={`/cocktails/${cocktail.id}`}>
-                <img
-                  src={cocktail.thumb_url}
-                  alt={cocktail.name}
-                  className="w-full h-48 object-cover rounded"
-                />
-                <h3 className="text-lg font-bold mt-2">{cocktail.name}</h3>
-              </Link>
-              <button
-                aria-label="Remove from favorites"
-                onClick={() => removeFavorite(cocktail.id)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full px-3 py-1 text-sm"
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
+          {cocktails.map((cocktail, i) => (
+            <Stagger index={i} key={cocktail.id}>
+              <article
+                data-testid="favorite-card"
+                className="card-interactive group relative h-full overflow-hidden p-3"
               >
-                ❌
-              </button>
-            </div>
+                <Link to={`/cocktails/${cocktail.id}`}>
+                  <div className="overflow-hidden rounded-xl">
+                    <img
+                      src={cocktail.thumb_url}
+                      alt={cocktail.name}
+                      className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                  </div>
+                  <h3 className="mt-4 text-base font-semibold leading-snug">
+                    {cocktail.name}
+                  </h3>
+                </Link>
+                <button
+                  aria-label="Remove from favorites"
+                  onClick={() => removeFavorite(cocktail.id)}
+                  className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-canvas/70 text-danger backdrop-blur transition hover:scale-110 active:scale-90"
+                >
+                  <XIcon size={15} weight="bold" aria-hidden="true" />
+                </button>
+              </article>
+            </Stagger>
           ))}
         </div>
       )}

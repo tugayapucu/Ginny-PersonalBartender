@@ -278,3 +278,48 @@ def test_random_response_has_id_and_name(client):
     assert "id" in body
     assert "name" in body
     assert body["name"] in ("Test Margarita", "Test Vodka Soda")
+
+
+# ---------------------------------------------------------------------------
+# GET /cocktail-of-the-day
+# ---------------------------------------------------------------------------
+
+def test_cotd_returns_200(client):
+    r = client.get("/cocktail-of-the-day")
+    assert r.status_code == 200
+
+
+def test_cotd_returns_full_detail(client):
+    r = client.get("/cocktail-of-the-day")
+    body = r.json()
+    assert "id" in body
+    assert "name" in body
+    assert "ingredients" in body
+    assert isinstance(body["ingredients"], list)
+    assert len(body["ingredients"]) > 0
+
+
+def test_cotd_is_stable_for_same_date(client):
+    r1 = client.get("/cocktail-of-the-day", params={"for_date": "2025-06-15"})
+    r2 = client.get("/cocktail-of-the-day", params={"for_date": "2025-06-15"})
+    assert r1.status_code == 200
+    assert r1.json()["id"] == r2.json()["id"]
+
+
+def test_cotd_different_dates_pick_different_cocktails(client):
+    import datetime
+    import random as rnd
+    ids = [1001, 1002]
+    date_a = datetime.date(2025, 1, 1)
+    pick_a = rnd.Random(date_a.toordinal()).choice(ids)
+    # Find the nearest date that the algorithm maps to the other cocktail.
+    date_b = None
+    for offset in range(1, 200):
+        candidate = date_a + datetime.timedelta(days=offset)
+        if rnd.Random(candidate.toordinal()).choice(ids) != pick_a:
+            date_b = candidate
+            break
+    assert date_b is not None, "expected a differing pick within 200 days"
+    r_a = client.get("/cocktail-of-the-day", params={"for_date": date_a.isoformat()})
+    r_b = client.get("/cocktail-of-the-day", params={"for_date": date_b.isoformat()})
+    assert r_a.json()["id"] != r_b.json()["id"]

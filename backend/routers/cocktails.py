@@ -1,3 +1,4 @@
+import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -58,6 +59,22 @@ def get_available_cocktails(
         if i.strip()
     ]
     return cocktail_service.get_available(db, ingredient_keys)
+
+
+@router.get("/cocktail-of-the-day", response_model=CocktailDetail)
+def get_cocktail_of_the_day(
+    for_date: Optional[datetime.date] = Query(
+        None,
+        description="Date in YYYY-MM-DD format. Defaults to today (UTC). "
+                    "Accepts an override so clients can retrieve any day's pick.",
+    ),
+    db: Session = Depends(get_db),
+):
+    target = for_date or datetime.datetime.now(datetime.timezone.utc).date()
+    result = cocktail_service.get_by_date(db, target)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No cocktails available")
+    return result
 
 
 @router.get("/random", response_model=CocktailSummary)

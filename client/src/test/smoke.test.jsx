@@ -11,6 +11,7 @@ vi.mock("../api", () => ({
   fetchCocktails: vi.fn(),
   searchCocktails: vi.fn(),
   getRandomCocktail: vi.fn(),
+  getCocktailOfTheDayRequest: vi.fn(),
   getMeRequest: vi.fn(),
   updateMeRequest: vi.fn(),
   changePasswordRequest: vi.fn(),

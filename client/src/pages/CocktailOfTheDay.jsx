@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getCocktailById, getRandomCocktail } from "../api";
+import { getCocktailOfTheDayRequest } from "../api";
 
 const CocktailOfTheDay = () => {
   const [cocktail, setCocktail] = useState(null);
@@ -10,14 +10,8 @@ const CocktailOfTheDay = () => {
     try {
       setLoading(true);
       setError("");
-      const randomRes = await getRandomCocktail();
-      const random = randomRes.data;
-      if (!random || !random.id) {
-        setError("No cocktail available.");
-        return;
-      }
-      const detailRes = await getCocktailById(random.id);
-      setCocktail(detailRes.data);
+      const res = await getCocktailOfTheDayRequest();
+      setCocktail(res.data);
     } catch (err) {
       console.error("Failed to load cocktail of the day", err);
       setError("Failed to load cocktail of the day.");

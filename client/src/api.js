@@ -41,6 +41,9 @@ export const deleteAccountRequest = (token) =>
 export const disableAccountRequest = (token) =>
   API.post("/users/me/disable", {}, authConfig(token));
 
+export const getCocktailOfTheDayRequest = () =>
+  API.get("/api/v1/cocktail-of-the-day");
+
 export const getPantryRequest = (token) =>
   API.get("/api/v1/pantry/", authConfig(token));
 export const addPantryItemRequest = (token, ingredientName) =>

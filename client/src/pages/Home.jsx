@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getCocktailById, getRandomCocktail } from "../api";
+import { getCocktailOfTheDayRequest } from "../api";
 import video from "../assets/videos/cocktail-video-3.mp4";
 import howItWorksImg from "../assets/images/cocktail-img-1.jpg";
 
@@ -10,12 +10,8 @@ const Home = () => {
   useEffect(() => {
     const loadCocktail = async () => {
       try {
-        const randomRes = await getRandomCocktail();
-        const random = randomRes.data;
-        if (random?.id) {
-          const detailRes = await getCocktailById(random.id);
-          setCocktail(detailRes.data);
-        }
+        const res = await getCocktailOfTheDayRequest();
+        setCocktail(res.data);
       } catch (err) {
         console.error("Failed to load cocktail of the day", err);
       }

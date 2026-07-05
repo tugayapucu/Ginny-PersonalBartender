@@ -85,6 +85,14 @@ def test_v1_random_returns_cocktail(client):
     assert "id" in body and "name" in body
 
 
+def test_v1_cocktail_of_the_day(client):
+    r = client.get(f"{V1}/cocktail-of-the-day")
+    assert r.status_code == 200
+    body = r.json()
+    assert "id" in body
+    assert "ingredients" in body  # full detail, not just summary
+
+
 # ---------------------------------------------------------------------------
 # POST /api/v1/auth/register  +  POST /api/v1/auth/login
 # ---------------------------------------------------------------------------

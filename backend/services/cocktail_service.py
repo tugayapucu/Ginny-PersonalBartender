@@ -148,3 +148,18 @@ def get_random(db: Session) -> Optional[dict]:
     random_offset = random.randint(0, count - 1)
     drink = db.query(Drink).offset(random_offset).limit(1).first()
     return _to_summary(drink) if drink else None
+
+
+def get_by_date(db: Session, target_date) -> Optional[dict]:
+    """Return a deterministic cocktail for a given date.
+
+    Uses a date-seeded Random instance so the pick is stable for the full
+    calendar day regardless of how many times the endpoint is called.
+    Server timezone: UTC (caller supplies the date).
+    """
+    ids = [row.id for row in db.query(Drink.id).order_by(Drink.id).all()]
+    if not ids:
+        return None
+    rng = random.Random(target_date.toordinal())
+    chosen_id = rng.choice(ids)
+    return get_by_id(db, chosen_id)

@@ -122,23 +122,51 @@ def get_available(db: Session, ingredient_keys: List[str]) -> List[dict]:
     if not ingredient_keys:
         return []
 
+    submitted_set = set(ingredient_keys)
+
     # COUNT(DISTINCT CASE WHEN name_key IN (...) THEN name_key END) = n
-    # finds drinks that contain all n requested ingredients.
+    # finds drinks that contain all n requested ingredients (strict AND).
     case_expr = case(
         (Ingredient.name_key.in_(ingredient_keys), Ingredient.name_key),
         else_=None,
     )
     matched_count = func.count(distinct(case_expr))
 
+    eligible_ids = [
+        row.id for row in (
+            db.query(Drink.id)
+            .join(DrinkIngredient, Drink.id == DrinkIngredient.drink_id)
+            .join(Ingredient, DrinkIngredient.ingredient_id == Ingredient.id)
+            .group_by(Drink.id)
+            .having(matched_count == len(ingredient_keys))
+            .all()
+        )
+    ]
+
+    if not eligible_ids:
+        return []
+
+    # Load with ingredients so we can compute per-cocktail match metadata.
     drinks = (
         db.query(Drink)
-        .join(DrinkIngredient, Drink.id == DrinkIngredient.drink_id)
-        .join(Ingredient, DrinkIngredient.ingredient_id == Ingredient.id)
-        .group_by(Drink.id)
-        .having(matched_count == len(ingredient_keys))
+        .options(joinedload(Drink.drink_ingredients).joinedload(DrinkIngredient.ingredient))
+        .filter(Drink.id.in_(eligible_ids))
+        .order_by(Drink.id)
         .all()
     )
-    return [_to_summary(d) for d in drinks]
+
+    results = []
+    for drink in drinks:
+        cocktail_keys = [di.ingredient.name_key for di in drink.drink_ingredients]
+        matched = [k for k in cocktail_keys if k in submitted_set]
+        missing = [k for k in cocktail_keys if k not in submitted_set]
+        total = len(cocktail_keys)
+        result = _to_summary(drink)
+        result["matched_ingredients"] = matched
+        result["missing_ingredients"] = missing
+        result["match_percentage"] = round(len(matched) / total, 4) if total else 0.0
+        results.append(result)
+    return results
 
 
 def get_random(db: Session) -> Optional[dict]:

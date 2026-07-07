@@ -3,8 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
-from schemas import CocktailSummary, CocktailDetail, PaginatedCocktailResponse
-from services import cocktail_service
+import models
+from schemas import CocktailSummary, CocktailDetail, CocktailAvailabilityResult, PaginatedCocktailResponse
+from services import cocktail_service, pantry_service
+from auth.dependencies import get_optional_user
 
 router = APIRouter()
 
@@ -48,16 +50,24 @@ def search_cocktails(
     return cocktail_service.search(db, query, page=page, page_size=page_size)
 
 
-@router.get("/available", response_model=List[CocktailSummary])
+@router.get("/available", response_model=List[CocktailAvailabilityResult])
 def get_available_cocktails(
-    has: str = Query(..., description="Comma-separated list of ingredients"),
+    has: Optional[str] = Query(None, description="Comma-separated list of ingredients. If omitted and user is authenticated, the saved pantry is used."),
     db: Session = Depends(get_db),
+    current_user: Optional[models.User] = Depends(get_optional_user),
 ):
-    ingredient_keys = [
-        cocktail_service.normalize_query(i)
-        for i in has.split(",")
-        if i.strip()
-    ]
+    has_trimmed = has.strip() if has else None
+    if has_trimmed:
+        ingredient_keys = [
+            cocktail_service.normalize_query(i)
+            for i in has_trimmed.split(",")
+            if i.strip()
+        ]
+    elif current_user:
+        pantry = pantry_service.list_items(db, current_user.id)
+        ingredient_keys = [item["ingredient_key"] for item in pantry]
+    else:
+        ingredient_keys = []
     return cocktail_service.get_available(db, ingredient_keys)
 
 

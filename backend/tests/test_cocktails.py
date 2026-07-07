@@ -264,6 +264,97 @@ def test_available_no_matches_returns_empty(client):
 
 
 # ---------------------------------------------------------------------------
+# GET /available — match metadata (Phase 5)
+# Seeded data: Test Margarita has [tequila, lime juice] (2 ingredients)
+# ---------------------------------------------------------------------------
+
+def test_available_returns_match_metadata_fields(client):
+    r = client.get("/available", params={"has": "tequila"})
+    assert r.status_code == 200
+    item = next(d for d in r.json() if d["name"] == "Test Margarita")
+    assert "matched_ingredients" in item
+    assert "missing_ingredients" in item
+    assert "match_percentage" in item
+    assert isinstance(item["matched_ingredients"], list)
+    assert isinstance(item["missing_ingredients"], list)
+    assert isinstance(item["match_percentage"], float)
+
+
+def test_available_match_metadata_accuracy(client):
+    # Submitting only tequila against Margarita (tequila + lime juice)
+    r = client.get("/available", params={"has": "tequila"})
+    item = next(d for d in r.json() if d["name"] == "Test Margarita")
+    assert "tequila" in item["matched_ingredients"]
+    assert "lime juice" in item["missing_ingredients"]
+    assert abs(item["match_percentage"] - 0.5) < 0.001  # 1 of 2 ingredients
+
+
+def test_available_full_match_gives_percentage_one(client):
+    r = client.get("/available", params={"has": "tequila,lime juice"})
+    item = next(d for d in r.json() if d["name"] == "Test Margarita")
+    assert item["missing_ingredients"] == []
+    assert abs(item["match_percentage"] - 1.0) < 0.001
+
+
+def test_available_unauthenticated_no_has_returns_empty(client):
+    r = client.get("/available")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+# ---------------------------------------------------------------------------
+# GET /available — pantry fallback for authenticated users (Phase 5)
+# ---------------------------------------------------------------------------
+
+def test_available_authenticated_uses_pantry(client):
+    from helpers import register_user, get_token, auth_headers
+    register_user(client, "avail_pantry", "avail_pantry@example.com")
+    token = get_token(client, "avail_pantry@example.com")
+    hdrs = auth_headers(token)
+
+    client.post("/api/v1/pantry/", json={"ingredient_name": "tequila"}, headers=hdrs)
+    client.post("/api/v1/pantry/", json={"ingredient_name": "lime juice"}, headers=hdrs)
+
+    r = client.get("/api/v1/available", headers=hdrs)
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()}
+    assert "Test Margarita" in names
+
+
+def test_available_authenticated_has_overrides_pantry(client):
+    from helpers import register_user, get_token, auth_headers
+    register_user(client, "avail_override", "avail_override@example.com")
+    token = get_token(client, "avail_override@example.com")
+    hdrs = auth_headers(token)
+
+    # Pantry has tequila, but has= overrides to vodka
+    client.post("/api/v1/pantry/", json={"ingredient_name": "tequila"}, headers=hdrs)
+
+    r = client.get("/api/v1/available", params={"has": "vodka"}, headers=hdrs)
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()}
+    assert "Test Vodka Soda" in names
+    assert "Test Margarita" not in names
+
+
+def test_available_empty_pantry_returns_empty(client):
+    from helpers import register_user, get_token, auth_headers
+    register_user(client, "avail_empty", "avail_empty@example.com")
+    token = get_token(client, "avail_empty@example.com")
+
+    r = client.get("/api/v1/available", headers=auth_headers(token))
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_available_ingredient_normalization(client):
+    r = client.get("/available", params={"has": "  Tequila  "})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()}
+    assert "Test Margarita" in names
+
+
+# ---------------------------------------------------------------------------
 # GET /random
 # ---------------------------------------------------------------------------
 

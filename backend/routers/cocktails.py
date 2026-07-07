@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
 import models
-from schemas import CocktailSummary, CocktailDetail, CocktailAvailabilityResult, PaginatedCocktailResponse
+from schemas import CocktailSummary, CocktailDetail, CocktailAvailabilityResult, PaginatedAvailabilityResponse, PaginatedCocktailResponse
 from services import cocktail_service, pantry_service
 from auth.dependencies import get_optional_user
 
@@ -48,6 +48,32 @@ def search_cocktails(
     db: Session = Depends(get_db),
 ):
     return cocktail_service.search(db, query, page=page, page_size=page_size)
+
+
+@router.get("/available/suggestions", response_model=PaginatedAvailabilityResponse)
+def get_available_suggestions(
+    has: Optional[str] = Query(None, description="Comma-separated list of ingredients. If omitted and user is authenticated, the saved pantry is used."),
+    max_missing: int = Query(2, ge=1, le=5, description="Maximum missing ingredients to allow (1–5, default 2)."),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: Optional[models.User] = Depends(get_optional_user),
+):
+    has_trimmed = has.strip() if has else None
+    if has_trimmed:
+        ingredient_keys = [
+            cocktail_service.normalize_query(i)
+            for i in has_trimmed.split(",")
+            if i.strip()
+        ]
+    elif current_user:
+        pantry = pantry_service.list_items(db, current_user.id)
+        ingredient_keys = [item["ingredient_key"] for item in pantry]
+    else:
+        ingredient_keys = []
+    return cocktail_service.get_suggestions(
+        db, ingredient_keys, max_missing=max_missing, page=page, page_size=page_size
+    )
 
 
 @router.get("/available", response_model=List[CocktailAvailabilityResult])

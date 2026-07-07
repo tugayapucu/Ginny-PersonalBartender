@@ -12,6 +12,8 @@ vi.mock("../api", () => ({
   searchCocktails: vi.fn(),
   getRandomCocktail: vi.fn(),
   getCocktailOfTheDayRequest: vi.fn(),
+  getAvailableCocktails: vi.fn(),
+  getSuggestionsRequest: vi.fn(),
   getMeRequest: vi.fn(),
   updateMeRequest: vi.fn(),
   changePasswordRequest: vi.fn(),
@@ -34,6 +36,7 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import CocktailList from "../components/CocktailList";
 import Settings from "../pages/Settings";
 import Pantry from "../pages/Pantry";
+import AvailableCocktails from "../pages/AvailableCocktails";
 
 // Default unauthenticated state — individual tests override as needed
 beforeEach(() => {
@@ -216,6 +219,23 @@ describe("Pantry page", () => {
 
     expect(screen.getByText("Tequila")).toBeInTheDocument();
     expect(screen.getByText("Lime Juice")).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// AvailableCocktails
+// ---------------------------------------------------------------------------
+describe("AvailableCocktails page", () => {
+  it("renders heading, input, and empty-suggestions state with no ingredients", async () => {
+    render(
+      <MemoryRouter>
+        <AvailableCocktails />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole("heading", { name: /what can i make/i })).toBeInTheDocument();
+    expect(screen.getByTestId("available-input")).toBeInTheDocument();
+    // No ingredients added → suggestions-empty is visible immediately
+    expect(screen.getByTestId("suggestions-empty")).toBeInTheDocument();
   });
 });
 

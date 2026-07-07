@@ -355,6 +355,85 @@ def test_available_ingredient_normalization(client):
 
 
 # ---------------------------------------------------------------------------
+# GET /api/v1/available/suggestions (Phase 5)
+# Seeded data: Margarita [tequila, lime juice] | Vodka Soda [vodka]
+# ---------------------------------------------------------------------------
+
+def test_suggestions_include_one_missing(client):
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila"})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    # Margarita is missing lime juice (1 missing ≤ max_missing=2) → included
+    assert "Test Margarita" in names
+
+
+def test_suggestions_exclude_more_than_max_missing(client):
+    # NONEXISTENT_ING is not in catalogue so:
+    #   Margarita needs [tequila, lime juice] → 2 missing
+    #   Vodka Soda needs [vodka] → 1 missing
+    # With max_missing=1 only Vodka Soda qualifies.
+    r = client.get("/api/v1/available/suggestions", params={"has": "NONEXISTENT_ING", "max_missing": 1})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Vodka Soda" in names
+    assert "Test Margarita" not in names
+
+
+def test_suggestions_exclude_fully_makeable(client):
+    # All ingredients provided → 0 missing → nothing in suggestions (use /available)
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila,lime juice,vodka"})
+    assert r.status_code == 200
+    assert r.json()["items"] == []
+
+
+def test_suggestions_returns_match_metadata(client):
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila"})
+    assert r.status_code == 200
+    item = next(d for d in r.json()["items"] if d["name"] == "Test Margarita")
+    assert "tequila" in item["matched_ingredients"]
+    assert "lime juice" in item["missing_ingredients"]
+    assert 0.0 < item["match_percentage"] < 1.0
+
+
+def test_suggestions_pagination_returns_metadata(client):
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila"})
+    assert r.status_code == 200
+    body = r.json()
+    for field in ("items", "page", "page_size", "total"):
+        assert field in body, f"missing field: {field}"
+    assert body["page"] == 1
+    assert body["total"] >= 1
+
+
+def test_suggestions_unauthenticated_no_has_returns_empty(client):
+    r = client.get("/api/v1/available/suggestions")
+    assert r.status_code == 200
+    assert r.json()["items"] == []
+
+
+def test_suggestions_authenticated_uses_pantry(client):
+    from helpers import register_user, get_token, auth_headers
+    register_user(client, "sug_pantry", "sug_pantry@example.com")
+    token = get_token(client, "sug_pantry@example.com")
+    hdrs = auth_headers(token)
+
+    # Add tequila only — Margarita needs lime juice too (1 missing)
+    client.post("/api/v1/pantry/", json={"ingredient_name": "tequila"}, headers=hdrs)
+
+    r = client.get("/api/v1/available/suggestions", headers=hdrs)
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Margarita" in names
+
+
+def test_suggestions_invalid_max_missing_returns_422(client):
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila", "max_missing": 0})
+    assert r.status_code == 422
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila", "max_missing": 6})
+    assert r.status_code == 422
+
+
+# ---------------------------------------------------------------------------
 # GET /random
 # ---------------------------------------------------------------------------
 

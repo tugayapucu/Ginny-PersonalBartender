@@ -102,6 +102,13 @@ class CocktailAvailabilityResult(CocktailSummary):
     match_percentage: float = 0.0
 
 
+class PaginatedAvailabilityResponse(BaseModel):
+    items: List[CocktailAvailabilityResult]
+    page: int
+    page_size: int
+    total: int
+
+
 # ---------------------------------------------------------------------------
 # Pantry schemas
 # ---------------------------------------------------------------------------

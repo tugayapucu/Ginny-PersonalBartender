@@ -1,4 +1,4 @@
-from sqlalchemy import func, case, distinct
+from sqlalchemy import and_, func, case, distinct
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 import random
@@ -167,6 +167,74 @@ def get_available(db: Session, ingredient_keys: List[str]) -> List[dict]:
         result["match_percentage"] = round(len(matched) / total, 4) if total else 0.0
         results.append(result)
     return results
+
+
+def get_suggestions(
+    db: Session,
+    ingredient_keys: List[str],
+    max_missing: int = 2,
+    page: int = 1,
+    page_size: int = 20,
+) -> dict:
+    """Return cocktails almost makeable from ingredient_keys.
+
+    Includes only cocktails with 1..max_missing ingredients not in ingredient_keys.
+    Fully makeable cocktails (0 missing) are excluded — use /available for those.
+    Results are sorted by match_percentage descending (closest to complete first).
+    """
+    if not ingredient_keys:
+        return {"items": [], "page": page, "page_size": page_size, "total": 0}
+
+    submitted_set = set(ingredient_keys)
+
+    matched_expr = func.sum(
+        case((Ingredient.name_key.in_(ingredient_keys), 1), else_=0)
+    )
+    total_expr = func.count(DrinkIngredient.ingredient_id)
+    missing_expr = total_expr - matched_expr
+
+    rows = (
+        db.query(Drink.id, total_expr.label("total_ings"), matched_expr.label("matched_ings"))
+        .join(DrinkIngredient, Drink.id == DrinkIngredient.drink_id)
+        .join(Ingredient, DrinkIngredient.ingredient_id == Ingredient.id)
+        .group_by(Drink.id)
+        .having(and_(missing_expr >= 1, missing_expr <= max_missing))
+        .order_by(matched_expr.desc(), Drink.id)
+        .all()
+    )
+
+    total = len(rows)
+    offset = (page - 1) * page_size
+    page_rows = rows[offset:offset + page_size]
+
+    if not page_rows:
+        return {"items": [], "page": page, "page_size": page_size, "total": total}
+
+    page_ids = [row.id for row in page_rows]
+    drinks_by_id = {
+        d.id: d
+        for d in db.query(Drink)
+        .options(joinedload(Drink.drink_ingredients).joinedload(DrinkIngredient.ingredient))
+        .filter(Drink.id.in_(page_ids))
+        .all()
+    }
+
+    items = []
+    for row in page_rows:
+        drink = drinks_by_id.get(row.id)
+        if not drink:
+            continue
+        cocktail_keys = [di.ingredient.name_key for di in drink.drink_ingredients]
+        matched = [k for k in cocktail_keys if k in submitted_set]
+        missing = [k for k in cocktail_keys if k not in submitted_set]
+        total_ings = len(cocktail_keys)
+        result = _to_summary(drink)
+        result["matched_ingredients"] = matched
+        result["missing_ingredients"] = missing
+        result["match_percentage"] = round(len(matched) / total_ings, 4) if total_ings else 0.0
+        items.append(result)
+
+    return {"items": items, "page": page, "page_size": page_size, "total": total}
 
 
 def get_random(db: Session) -> Optional[dict]:

@@ -19,7 +19,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
 
-import { AuthProvider } from "./hooks/useAuth";
+import AuthProvider from "./hooks/AuthProvider";
 
 function App() {
   useEffect(() => {

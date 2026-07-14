@@ -1,8 +1,5 @@
 import { motion, useReducedMotion } from "motion/react";
-
-// Shared "expo-out" curve — the calm, expensive-feeling deceleration used
-// across every entrance in the app.
-export const EASE = [0.16, 1, 0.3, 1];
+import { EASE } from "./motionConfig";
 
 /**
  * Reveal — fades + lifts its children into place once they scroll into view.

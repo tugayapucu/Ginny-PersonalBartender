@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion as Motion } from "motion/react";
 import { MartiniIcon } from "@phosphor-icons/react";
-import { getCocktailById, getRandomCocktail } from "../api";
-import { Reveal } from "../lib/motion";
 import { getCocktailOfTheDayRequest } from "../api";
+import { Reveal } from "../lib/motion";
 
 const CocktailOfTheDay = () => {
   const [cocktail, setCocktail] = useState(null);

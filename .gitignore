@@ -34,3 +34,7 @@ Thumbs.db
 
 # VS Code
 .vscode/
+
+# Playwright artifacts
+/test-results/
+/playwright-report/

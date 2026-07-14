@@ -13,9 +13,9 @@ import {
   GearSixIcon,
   CaretRightIcon,
 } from "@phosphor-icons/react";
-import { getCocktailById, getRandomCocktail } from "../api";
-import { Reveal, Stagger, EASE } from "../lib/motion";
 import { getCocktailOfTheDayRequest } from "../api";
+import { Reveal, Stagger } from "../lib/motion";
+import { EASE } from "../lib/motionConfig";
 import video from "../assets/videos/cocktail-video-3.mp4";
 import howItWorksImg from "../assets/images/cocktail-img-1.jpg";
 

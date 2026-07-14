@@ -264,6 +264,176 @@ def test_available_no_matches_returns_empty(client):
 
 
 # ---------------------------------------------------------------------------
+# GET /available — match metadata (Phase 5)
+# Seeded data: Test Margarita has [tequila, lime juice] (2 ingredients)
+# ---------------------------------------------------------------------------
+
+def test_available_returns_match_metadata_fields(client):
+    r = client.get("/available", params={"has": "tequila"})
+    assert r.status_code == 200
+    item = next(d for d in r.json() if d["name"] == "Test Margarita")
+    assert "matched_ingredients" in item
+    assert "missing_ingredients" in item
+    assert "match_percentage" in item
+    assert isinstance(item["matched_ingredients"], list)
+    assert isinstance(item["missing_ingredients"], list)
+    assert isinstance(item["match_percentage"], float)
+
+
+def test_available_match_metadata_accuracy(client):
+    # Submitting only tequila against Margarita (tequila + lime juice)
+    r = client.get("/available", params={"has": "tequila"})
+    item = next(d for d in r.json() if d["name"] == "Test Margarita")
+    assert "tequila" in item["matched_ingredients"]
+    assert "lime juice" in item["missing_ingredients"]
+    assert abs(item["match_percentage"] - 0.5) < 0.001  # 1 of 2 ingredients
+
+
+def test_available_full_match_gives_percentage_one(client):
+    r = client.get("/available", params={"has": "tequila,lime juice"})
+    item = next(d for d in r.json() if d["name"] == "Test Margarita")
+    assert item["missing_ingredients"] == []
+    assert abs(item["match_percentage"] - 1.0) < 0.001
+
+
+def test_available_unauthenticated_no_has_returns_empty(client):
+    r = client.get("/available")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+# ---------------------------------------------------------------------------
+# GET /available — pantry fallback for authenticated users (Phase 5)
+# ---------------------------------------------------------------------------
+
+def test_available_authenticated_uses_pantry(client):
+    from helpers import register_user, get_token, auth_headers
+    register_user(client, "avail_pantry", "avail_pantry@example.com")
+    token = get_token(client, "avail_pantry@example.com")
+    hdrs = auth_headers(token)
+
+    client.post("/api/v1/pantry/", json={"ingredient_name": "tequila"}, headers=hdrs)
+    client.post("/api/v1/pantry/", json={"ingredient_name": "lime juice"}, headers=hdrs)
+
+    r = client.get("/api/v1/available", headers=hdrs)
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()}
+    assert "Test Margarita" in names
+
+
+def test_available_authenticated_has_overrides_pantry(client):
+    from helpers import register_user, get_token, auth_headers
+    register_user(client, "avail_override", "avail_override@example.com")
+    token = get_token(client, "avail_override@example.com")
+    hdrs = auth_headers(token)
+
+    # Pantry has tequila, but has= overrides to vodka
+    client.post("/api/v1/pantry/", json={"ingredient_name": "tequila"}, headers=hdrs)
+
+    r = client.get("/api/v1/available", params={"has": "vodka"}, headers=hdrs)
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()}
+    assert "Test Vodka Soda" in names
+    assert "Test Margarita" not in names
+
+
+def test_available_empty_pantry_returns_empty(client):
+    from helpers import register_user, get_token, auth_headers
+    register_user(client, "avail_empty", "avail_empty@example.com")
+    token = get_token(client, "avail_empty@example.com")
+
+    r = client.get("/api/v1/available", headers=auth_headers(token))
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_available_ingredient_normalization(client):
+    r = client.get("/available", params={"has": "  Tequila  "})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()}
+    assert "Test Margarita" in names
+
+
+# ---------------------------------------------------------------------------
+# GET /api/v1/available/suggestions (Phase 5)
+# Seeded data: Margarita [tequila, lime juice] | Vodka Soda [vodka]
+# ---------------------------------------------------------------------------
+
+def test_suggestions_include_one_missing(client):
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila"})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    # Margarita is missing lime juice (1 missing ≤ max_missing=2) → included
+    assert "Test Margarita" in names
+
+
+def test_suggestions_exclude_more_than_max_missing(client):
+    # NONEXISTENT_ING is not in catalogue so:
+    #   Margarita needs [tequila, lime juice] → 2 missing
+    #   Vodka Soda needs [vodka] → 1 missing
+    # With max_missing=1 only Vodka Soda qualifies.
+    r = client.get("/api/v1/available/suggestions", params={"has": "NONEXISTENT_ING", "max_missing": 1})
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Vodka Soda" in names
+    assert "Test Margarita" not in names
+
+
+def test_suggestions_exclude_fully_makeable(client):
+    # All ingredients provided → 0 missing → nothing in suggestions (use /available)
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila,lime juice,vodka"})
+    assert r.status_code == 200
+    assert r.json()["items"] == []
+
+
+def test_suggestions_returns_match_metadata(client):
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila"})
+    assert r.status_code == 200
+    item = next(d for d in r.json()["items"] if d["name"] == "Test Margarita")
+    assert "tequila" in item["matched_ingredients"]
+    assert "lime juice" in item["missing_ingredients"]
+    assert 0.0 < item["match_percentage"] < 1.0
+
+
+def test_suggestions_pagination_returns_metadata(client):
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila"})
+    assert r.status_code == 200
+    body = r.json()
+    for field in ("items", "page", "page_size", "total"):
+        assert field in body, f"missing field: {field}"
+    assert body["page"] == 1
+    assert body["total"] >= 1
+
+
+def test_suggestions_unauthenticated_no_has_returns_empty(client):
+    r = client.get("/api/v1/available/suggestions")
+    assert r.status_code == 200
+    assert r.json()["items"] == []
+
+
+def test_suggestions_authenticated_uses_pantry(client):
+    from helpers import register_user, get_token, auth_headers
+    register_user(client, "sug_pantry", "sug_pantry@example.com")
+    token = get_token(client, "sug_pantry@example.com")
+    hdrs = auth_headers(token)
+
+    # Add tequila only — Margarita needs lime juice too (1 missing)
+    client.post("/api/v1/pantry/", json={"ingredient_name": "tequila"}, headers=hdrs)
+
+    r = client.get("/api/v1/available/suggestions", headers=hdrs)
+    assert r.status_code == 200
+    names = {d["name"] for d in r.json()["items"]}
+    assert "Test Margarita" in names
+
+
+def test_suggestions_invalid_max_missing_returns_422(client):
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila", "max_missing": 0})
+    assert r.status_code == 422
+    r = client.get("/api/v1/available/suggestions", params={"has": "tequila", "max_missing": 6})
+    assert r.status_code == 422
+
+
+# ---------------------------------------------------------------------------
 # GET /random
 # ---------------------------------------------------------------------------
 
@@ -278,3 +448,48 @@ def test_random_response_has_id_and_name(client):
     assert "id" in body
     assert "name" in body
     assert body["name"] in ("Test Margarita", "Test Vodka Soda")
+
+
+# ---------------------------------------------------------------------------
+# GET /cocktail-of-the-day
+# ---------------------------------------------------------------------------
+
+def test_cotd_returns_200(client):
+    r = client.get("/cocktail-of-the-day")
+    assert r.status_code == 200
+
+
+def test_cotd_returns_full_detail(client):
+    r = client.get("/cocktail-of-the-day")
+    body = r.json()
+    assert "id" in body
+    assert "name" in body
+    assert "ingredients" in body
+    assert isinstance(body["ingredients"], list)
+    assert len(body["ingredients"]) > 0
+
+
+def test_cotd_is_stable_for_same_date(client):
+    r1 = client.get("/cocktail-of-the-day", params={"for_date": "2025-06-15"})
+    r2 = client.get("/cocktail-of-the-day", params={"for_date": "2025-06-15"})
+    assert r1.status_code == 200
+    assert r1.json()["id"] == r2.json()["id"]
+
+
+def test_cotd_different_dates_pick_different_cocktails(client):
+    import datetime
+    import random as rnd
+    ids = [1001, 1002]
+    date_a = datetime.date(2025, 1, 1)
+    pick_a = rnd.Random(date_a.toordinal()).choice(ids)
+    # Find the nearest date that the algorithm maps to the other cocktail.
+    date_b = None
+    for offset in range(1, 200):
+        candidate = date_a + datetime.timedelta(days=offset)
+        if rnd.Random(candidate.toordinal()).choice(ids) != pick_a:
+            date_b = candidate
+            break
+    assert date_b is not None, "expected a differing pick within 200 days"
+    r_a = client.get("/cocktail-of-the-day", params={"for_date": date_a.isoformat()})
+    r_b = client.get("/cocktail-of-the-day", params={"for_date": date_b.isoformat()})
+    assert r_a.json()["id"] != r_b.json()["id"]

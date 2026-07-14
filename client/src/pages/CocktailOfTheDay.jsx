@@ -4,6 +4,7 @@ import { motion as Motion } from "motion/react";
 import { MartiniIcon } from "@phosphor-icons/react";
 import { getCocktailById, getRandomCocktail } from "../api";
 import { Reveal } from "../lib/motion";
+import { getCocktailOfTheDayRequest } from "../api";
 
 const CocktailOfTheDay = () => {
   const [cocktail, setCocktail] = useState(null);
@@ -14,14 +15,8 @@ const CocktailOfTheDay = () => {
     try {
       setLoading(true);
       setError("");
-      const randomRes = await getRandomCocktail();
-      const random = randomRes.data;
-      if (!random || !random.id) {
-        setError("No cocktail available.");
-        return;
-      }
-      const detailRes = await getCocktailById(random.id);
-      setCocktail(detailRes.data);
+      const res = await getCocktailOfTheDayRequest();
+      setCocktail(res.data);
     } catch (err) {
       console.error("Failed to load cocktail of the day", err);
       setError("Failed to load cocktail of the day.");
@@ -36,7 +31,9 @@ const CocktailOfTheDay = () => {
 
   if (loading) {
     return (
-      <p className="py-20 text-center text-muted">Loading cocktail of the day…</p>
+      <p className="py-20 text-center text-muted">
+        Loading cocktail of the day…
+      </p>
     );
   }
 
@@ -52,18 +49,24 @@ const CocktailOfTheDay = () => {
   }
 
   if (!cocktail) {
-    return <p className="py-20 text-center text-muted">No cocktail available.</p>;
+    return (
+      <p className="py-20 text-center text-muted">No cocktail available.</p>
+    );
   }
 
   const ingredients = (cocktail.ingredients || []).map((item) =>
-    [item.measure, item.ingredient].filter(Boolean).join(" ")
+    [item.measure, item.ingredient].filter(Boolean).join(" "),
   );
 
   return (
     <div className="mx-auto max-w-4xl px-5 py-12">
       <div className="mb-8 text-center">
-        <Reveal as="p" className="eyebrow mb-3">Cocktail of the day</Reveal>
-        <Reveal as="h1" delay={0.05} className="text-4xl md:text-5xl">{cocktail.name}</Reveal>
+        <Reveal as="p" className="eyebrow mb-3">
+          Cocktail of the day
+        </Reveal>
+        <Reveal as="h1" delay={0.05} className="text-4xl md:text-5xl">
+          {cocktail.name}
+        </Reveal>
       </div>
 
       <Reveal delay={0.1} className="card overflow-hidden">
@@ -82,18 +85,28 @@ const CocktailOfTheDay = () => {
             <div className="mb-6 flex flex-wrap gap-2">
               {cocktail.glass && (
                 <span className="chip">
-                  <MartiniIcon size={16} weight="duotone" className="text-accent" aria-hidden="true" />
+                  <MartiniIcon
+                    size={16}
+                    weight="duotone"
+                    className="text-accent"
+                    aria-hidden="true"
+                  />
                   {cocktail.glass}
                 </span>
               )}
-              {cocktail.alcoholic && <span className="chip">{cocktail.alcoholic}</span>}
+              {cocktail.alcoholic && (
+                <span className="chip">{cocktail.alcoholic}</span>
+              )}
             </div>
             <h2 className="mb-3 text-lg font-semibold uppercase tracking-wide text-muted">
               Ingredients
             </h2>
             <ul className="space-y-2">
               {ingredients.map((item, idx) => (
-                <li key={idx} className="flex items-start gap-3 border-b border-line/60 pb-2">
+                <li
+                  key={idx}
+                  className="flex items-start gap-3 border-b border-line/60 pb-2"
+                >
                   <span className="ing-marker" aria-hidden="true" />
                   <span>{item}</span>
                 </li>

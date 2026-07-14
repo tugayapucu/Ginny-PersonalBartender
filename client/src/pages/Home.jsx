@@ -15,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { getCocktailById, getRandomCocktail } from "../api";
 import { Reveal, Stagger, EASE } from "../lib/motion";
+import { getCocktailOfTheDayRequest } from "../api";
 import video from "../assets/videos/cocktail-video-3.mp4";
 import howItWorksImg from "../assets/images/cocktail-img-1.jpg";
 
@@ -56,12 +57,8 @@ const Home = () => {
   useEffect(() => {
     const loadCocktail = async () => {
       try {
-        const randomRes = await getRandomCocktail();
-        const random = randomRes.data;
-        if (random?.id) {
-          const detailRes = await getCocktailById(random.id);
-          setCocktail(detailRes.data);
-        }
+        const res = await getCocktailOfTheDayRequest();
+        setCocktail(res.data);
       } catch (err) {
         console.error("Failed to load cocktail of the day", err);
       }
@@ -233,19 +230,21 @@ const Home = () => {
                     Ingredients
                   </Reveal>
                   <ul className="mb-8 space-y-2 text-left text-lg">
-                    {cocktail.ingredients?.slice(0, 6).map((ingredient, idx) => (
-                      <Reveal
-                        as="li"
-                        key={idx}
-                        delay={0.15 + idx * 0.06}
-                        className="flex items-start gap-3"
-                      >
-                        <span className="ing-marker" aria-hidden="true" />
-                        {[ingredient.measure, ingredient.ingredient]
-                          .filter(Boolean)
-                          .join(" ")}
-                      </Reveal>
-                    ))}
+                    {cocktail.ingredients
+                      ?.slice(0, 6)
+                      .map((ingredient, idx) => (
+                        <Reveal
+                          as="li"
+                          key={idx}
+                          delay={0.15 + idx * 0.06}
+                          className="flex items-start gap-3"
+                        >
+                          <span className="ing-marker" aria-hidden="true" />
+                          {[ingredient.measure, ingredient.ingredient]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </Reveal>
+                      ))}
                   </ul>
                   <Reveal delay={0.2}>
                     <Link to="/cocktail-of-the-day" className="btn-primary">
@@ -254,7 +253,9 @@ const Home = () => {
                   </Reveal>
                 </>
               ) : (
-                <p className="text-left text-muted">Loading today's cocktail…</p>
+                <p className="text-left text-muted">
+                  Loading today's cocktail…
+                </p>
               )}
             </div>
           </div>
@@ -279,11 +280,20 @@ const Home = () => {
               return (
                 <Stagger key={feature.title} index={i} className="feature-item">
                   <div className="feature-icon">
-                    <FeatureIcon size={26} weight="duotone" className="text-accent" aria-hidden="true" />
+                    <FeatureIcon
+                      size={26}
+                      weight="duotone"
+                      className="text-accent"
+                      aria-hidden="true"
+                    />
                   </div>
                   <div>
-                    <h5 className="mb-2 text-lg font-semibold">{feature.title}</h5>
-                    <p className="text-left text-base text-muted">{feature.body}</p>
+                    <h5 className="mb-2 text-lg font-semibold">
+                      {feature.title}
+                    </h5>
+                    <p className="text-left text-base text-muted">
+                      {feature.body}
+                    </p>
                   </div>
                 </Stagger>
               );

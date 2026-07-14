@@ -1,64 +1,81 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { XIcon, HeartIcon } from "@phosphor-icons/react";
-import useAuth from '../hooks/useAuth'
-import useFavorites from '../hooks/useFavorites'
-import { getAvailableCocktails } from "../api";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { HeartIcon, XIcon } from "@phosphor-icons/react";
+import {
+  getAvailableCocktails,
+  getSuggestionsRequest,
+} from "../api";
+import useAuth from "../hooks/useAuth";
+import useFavorites from "../hooks/useFavorites";
 import { Reveal, Stagger } from "../lib/motion";
 
 function AvailableCocktails() {
-  const [input, setInput] = useState('')
-  const [ingredients, setIngredients] = useState([])
-  const [cocktails, setCocktails] = useState([])
+  const [input, setInput] = useState("");
+  const [ingredients, setIngredients] = useState([]);
+  const [cocktails, setCocktails] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
 
-  const { token } = useAuth()
-  const { favorites, addFavorite, removeFavorite } = useFavorites(token)
+  const { token } = useAuth();
+  const { favorites, addFavorite, removeFavorite } = useFavorites(token);
 
   const toggleFavorite = (cocktailId) => {
-    const isFav = favorites.map(String).includes(String(cocktailId))
-    if (isFav) {
-      removeFavorite(cocktailId)
+    const isFavorite = favorites.map(String).includes(String(cocktailId));
+    if (isFavorite) {
+      removeFavorite(cocktailId);
     } else {
-      addFavorite(cocktailId)
+      addFavorite(cocktailId);
     }
-  }
+  };
 
   const handleAdd = () => {
-    const trimmed = input.trim().toLowerCase()
+    const trimmed = input.trim().toLowerCase();
     if (trimmed && !ingredients.includes(trimmed)) {
-      setIngredients([...ingredients, trimmed])
-      setInput('')
+      setIngredients((current) => [...current, trimmed]);
+      setInput("");
     }
-  }
+  };
 
-  const handleRemove = (ing) => {
-    setIngredients(ingredients.filter(i => i !== ing))
-  }
+  const handleRemove = (ingredient) => {
+    setIngredients((current) =>
+      current.filter((item) => item !== ingredient)
+    );
+  };
 
   useEffect(() => {
     if (ingredients.length === 0) {
-      setCocktails([])
-      return
+      setCocktails([]);
+      setSuggestions([]);
+      return;
     }
-    const fetchAvailableCocktails = async () => {
+
+    const fetchData = async () => {
       try {
-        const res = await getAvailableCocktails(ingredients)
-        setCocktails(res.data)
-      } catch (err) {
-        console.error('Fetch failed:', err)
+        const [availableResponse, suggestionsResponse] = await Promise.all([
+          getAvailableCocktails(ingredients),
+          getSuggestionsRequest(ingredients),
+        ]);
+        setCocktails(availableResponse.data);
+        setSuggestions(suggestionsResponse.data.items || []);
+      } catch (error) {
+        console.error("Failed to load available cocktails", error);
       }
-    }
-    fetchAvailableCocktails()
-  }, [ingredients])
+    };
+
+    fetchData();
+  }, [ingredients]);
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-12">
       <div className="mb-8">
-        <Reveal as="p" className="eyebrow mb-3">Your pantry, your drinks</Reveal>
-        <Reveal as="h1" delay={0.05} className="text-4xl md:text-5xl">What can I make?</Reveal>
+        <Reveal as="p" className="eyebrow mb-3">
+          Your pantry, your drinks
+        </Reveal>
+        <Reveal as="h1" delay={0.05} className="text-4xl md:text-5xl">
+          What can I make?
+        </Reveal>
         <Reveal as="p" delay={0.1} className="mt-3 max-w-xl text-muted">
-          Add the ingredients you have on hand and we'll find every cocktail you
-          can make right now.
+          Add the ingredients you have on hand and we&apos;ll find every
+          cocktail you can make right now.
         </Reveal>
       </div>
 
@@ -69,90 +86,189 @@ function AvailableCocktails() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <input
             id="available-input"
+            data-testid="available-input"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(event) => setInput(event.target.value)}
             placeholder="e.g. Tequila, Lime juice…"
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+            onKeyDown={(event) => event.key === "Enter" && handleAdd()}
             className="input flex-1"
           />
-          <button onClick={handleAdd} className="btn-primary">
+          <button
+            type="button"
+            onClick={handleAdd}
+            data-testid="available-add-btn"
+            className="btn-primary"
+          >
             Add
           </button>
           {ingredients.length > 0 && (
-            <button onClick={() => setIngredients([])} className="btn-ghost">
+            <button
+              type="button"
+              onClick={() => setIngredients([])}
+              className="btn-ghost"
+            >
               Clear all
             </button>
           )}
         </div>
 
-        {ingredients.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {ingredients.map((ing, idx) => (
-              <span key={idx} className="chip capitalize">
-                {ing}
-                <button
-                  aria-label={`Remove ${ing}`}
-                  onClick={() => handleRemove(ing)}
-                  className="text-muted transition-colors hover:text-danger"
-                >
-                  <XIcon size={14} weight="bold" aria-hidden="true" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
+        <div
+          className="mt-4 flex flex-wrap gap-2"
+          data-testid="ingredients-list"
+        >
+          {ingredients.map((ingredient) => (
+            <span key={ingredient} className="chip capitalize">
+              {ingredient}
+              <button
+                type="button"
+                aria-label={`Remove ${ingredient}`}
+                onClick={() => handleRemove(ingredient)}
+                className="text-muted transition-colors hover:text-danger"
+              >
+                <XIcon size={14} weight="bold" aria-hidden="true" />
+              </button>
+            </span>
+          ))}
+        </div>
       </div>
 
-      <div className="mt-8">
+      <section className="mt-8" data-testid="available-results">
         {ingredients.length === 0 ? (
-          <p className="py-12 text-center text-muted">
-            Add an ingredient above to get started.
+          <p
+            className="py-12 text-center text-muted"
+            data-testid="available-empty"
+          >
+            Add ingredients above to see what you can make.
           </p>
         ) : cocktails.length > 0 ? (
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-            {cocktails.map((c, i) => {
-              const isFav = favorites.map(String).includes(String(c.id))
+            {cocktails.map((cocktail, index) => {
+              const isFavorite = favorites
+                .map(String)
+                .includes(String(cocktail.id));
+
               return (
-                <Stagger index={i} key={c.id}>
-                  <article className="card-interactive group relative h-full overflow-hidden p-3">
-                    <Link to={`/cocktails/${c.id}`}>
+                <Stagger index={index} key={cocktail.id}>
+                  <article
+                    className="card-interactive group relative h-full overflow-hidden p-3"
+                    data-testid="available-item"
+                  >
+                    <Link to={`/cocktails/${cocktail.id}`}>
                       <div className="overflow-hidden rounded-xl">
                         <img
-                          src={c.thumb_url}
-                          alt={c.name}
+                          src={cocktail.thumb_url}
+                          alt={cocktail.name}
                           className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                       </div>
-                      <h3 className="mt-4 text-base font-semibold leading-snug">{c.name}</h3>
+                      <h3 className="mt-4 text-base font-semibold leading-snug">
+                        {cocktail.name}
+                      </h3>
                       <p className="mt-1 text-sm text-muted">
-                        {c.category} · {c.alcoholic}
+                        {cocktail.category} · {cocktail.alcoholic}
                       </p>
+                      {cocktail.glass && (
+                        <p className="mt-1 text-xs text-muted">
+                          {cocktail.glass}
+                        </p>
+                      )}
                     </Link>
                     <button
-                      aria-label={isFav ? 'Remove from favorites' : 'Add to favorites'}
-                      onClick={() => toggleFavorite(c.id)}
+                      type="button"
+                      aria-label={
+                        isFavorite
+                          ? `Remove ${cocktail.name} from favorites`
+                          : `Add ${cocktail.name} to favorites`
+                      }
+                      onClick={() => toggleFavorite(cocktail.id)}
                       className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-canvas/70 backdrop-blur transition hover:scale-110 active:scale-90"
                     >
                       <HeartIcon
                         size={18}
-                        weight={isFav ? 'fill' : 'regular'}
-                        className={isFav ? 'text-danger' : 'text-ink'}
+                        weight={isFavorite ? "fill" : "regular"}
+                        className={isFavorite ? "text-danger" : "text-ink"}
                         aria-hidden="true"
                       />
                     </button>
                   </article>
                 </Stagger>
-              )
+              );
             })}
           </div>
         ) : (
-          <p className="py-12 text-center text-muted">
-            No cocktails match your ingredients. Try removing one or adding more.
+          <p
+            className="py-12 text-center text-muted"
+            data-testid="available-empty"
+          >
+            No cocktails match all your ingredients exactly.
           </p>
         )}
-      </div>
+      </section>
+
+      <section className="mt-16" data-testid="suggestions-section">
+        <Reveal as="p" className="eyebrow mb-3">
+          Nearly ready
+        </Reveal>
+        <Reveal as="h2" delay={0.05} className="text-3xl md:text-4xl">
+          Almost there...
+        </Reveal>
+        <Reveal as="p" delay={0.1} className="mt-3 max-w-xl text-muted">
+          These cocktails only need a few more ingredients.
+        </Reveal>
+
+        {suggestions.length > 0 ? (
+          <div
+            className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4"
+            data-testid="suggestions-list"
+          >
+            {suggestions.map((suggestion, index) => (
+              <Stagger index={index} key={suggestion.id}>
+                <article
+                  className="card-interactive group h-full overflow-hidden p-3"
+                  data-testid="suggestion-item"
+                >
+                  <Link to={`/cocktails/${suggestion.id}`}>
+                    <div className="overflow-hidden rounded-xl">
+                      <img
+                        src={suggestion.thumb_url}
+                        alt={suggestion.name}
+                        className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </div>
+                    <h3 className="mt-4 text-base font-semibold leading-snug">
+                      {suggestion.name}
+                    </h3>
+                    <p className="mt-1 text-sm font-medium text-accent">
+                      {Math.round(suggestion.match_percentage * 100)}% match
+                    </p>
+                    <div className="mt-3 text-sm text-muted">
+                      <span className="font-medium text-ink">Missing:</span>
+                      <ul className="mt-1 space-y-1">
+                        {suggestion.missing_ingredients.map((ingredient) => (
+                          <li key={ingredient} className="capitalize">
+                            {ingredient}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Link>
+                </article>
+              </Stagger>
+            ))}
+          </div>
+        ) : (
+          <p
+            className="py-12 text-center text-muted"
+            data-testid="suggestions-empty"
+          >
+            {ingredients.length === 0
+              ? "Add ingredients above to see what you’re close to making."
+              : "No close matches found. Try adding more ingredients."}
+          </p>
+        )}
+      </section>
     </div>
-  )
+  );
 }
 
-export default AvailableCocktails
+export default AvailableCocktails;

@@ -95,6 +95,24 @@ class UserPreferencesUpdate(BaseModel):
 # Pantry schemas
 # ---------------------------------------------------------------------------
 
+class CocktailAvailabilityResult(CocktailSummary):
+    """CocktailSummary extended with per-cocktail match metadata."""
+    matched_ingredients: List[str] = []
+    missing_ingredients: List[str] = []
+    match_percentage: float = 0.0
+
+
+class PaginatedAvailabilityResponse(BaseModel):
+    items: List[CocktailAvailabilityResult]
+    page: int
+    page_size: int
+    total: int
+
+
+# ---------------------------------------------------------------------------
+# Pantry schemas
+# ---------------------------------------------------------------------------
+
 class PantryItemCreate(BaseModel):
     ingredient_name: str
 

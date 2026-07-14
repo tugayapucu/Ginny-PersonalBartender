@@ -7,6 +7,7 @@ from routers import cocktails
 from routers import users
 from routers import favorites
 from routers import pantry
+from routers import notes
 from auth.routes import router as auth_router
 from settings import CORS_ALLOWED_ORIGINS
 from database import engine
@@ -80,6 +81,7 @@ v1.include_router(auth_router)
 v1.include_router(favorites.router)
 v1.include_router(users.router)
 v1.include_router(pantry.router)
+v1.include_router(notes.router)
 app.include_router(v1)
 
 # Backward-compatibility routes — kept so existing frontend and tests continue
@@ -89,3 +91,4 @@ app.include_router(auth_router)
 app.include_router(favorites.router)
 app.include_router(users.router)
 app.include_router(pantry.router)
+app.include_router(notes.router)

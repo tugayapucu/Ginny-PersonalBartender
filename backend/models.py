@@ -1,5 +1,5 @@
 import datetime
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -62,6 +62,7 @@ class User(Base):
 
     favorites = relationship("Favorite", back_populates="user", cascade="all, delete")
     pantry_items = relationship("UserPantryItem", back_populates="user", cascade="all, delete")
+    cocktail_notes = relationship("UserCocktailNote", back_populates="user", cascade="all, delete")
 
 
 class Favorite(Base):
@@ -89,3 +90,21 @@ class UserPantryItem(Base):
 
     user = relationship("User", back_populates="pantry_items")
     ingredient = relationship("Ingredient")
+
+
+class UserCocktailNote(Base):
+    __tablename__ = "user_cocktail_notes"
+    __table_args__ = (
+        UniqueConstraint("user_id", "drink_id", name="uq_note_user_drink"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    drink_id = Column(Integer, ForeignKey("drinks.id"), nullable=False)
+    rating = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    user = relationship("User", back_populates="cocktail_notes")
+    drink = relationship("Drink")

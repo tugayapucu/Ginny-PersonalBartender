@@ -33,7 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from database import Base, get_db          # noqa: E402
 from main import app                        # noqa: E402
-from models import Drink, Ingredient, DrinkIngredient, UserPantryItem  # noqa: E402
+from models import Drink, Ingredient, DrinkIngredient, UserPantryItem, UserCocktailNote  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -114,6 +114,7 @@ def db():
         yield session
     finally:
         session.rollback()  # clear any failed transaction before cleanup
+        session.execute(text("DELETE FROM user_cocktail_notes"))
         session.execute(text("DELETE FROM user_pantry_items"))
         session.execute(text("DELETE FROM favorites"))
         session.execute(text("DELETE FROM users"))

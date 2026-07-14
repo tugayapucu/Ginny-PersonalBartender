@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional, Literal
 
 
@@ -122,3 +123,21 @@ class PantryItemResponse(BaseModel):
     ingredient_name: str
     ingredient_key: str
     ingredient_id: Optional[int] = None
+
+
+# ---------------------------------------------------------------------------
+# Tasting notes schemas
+# ---------------------------------------------------------------------------
+
+class NoteUpsert(BaseModel):
+    rating: Optional[int] = Field(None, ge=1, le=5)
+    notes: Optional[str] = None
+
+
+class NoteResponse(BaseModel):
+    id: int
+    drink_id: int
+    rating: Optional[int] = None
+    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime

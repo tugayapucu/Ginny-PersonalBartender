@@ -23,11 +23,15 @@ vi.mock("../api", () => ({
   getPantryRequest: vi.fn(),
   addPantryItemRequest: vi.fn(),
   removePantryItemRequest: vi.fn(),
+  getCocktailById: vi.fn(),
+  getMyNoteRequest: vi.fn(),
+  upsertMyNoteRequest: vi.fn(),
+  deleteMyNoteRequest: vi.fn(),
 }));
 
 import useAuth from "../hooks/useAuth";
 import useFavorites from "../hooks/useFavorites";
-import { fetchCocktails, getMeRequest, getPantryRequest } from "../api";
+import { fetchCocktails, getMeRequest, getPantryRequest, getCocktailById, getMyNoteRequest } from "../api";
 
 import Navbar from "../components/Navbar";
 import Login from "../pages/Login";
@@ -37,6 +41,7 @@ import CocktailList from "../components/CocktailList";
 import Settings from "../pages/Settings";
 import Pantry from "../pages/Pantry";
 import AvailableCocktails from "../pages/AvailableCocktails";
+import CocktailDetail from "../pages/CocktailDetail";
 
 // Default unauthenticated state — individual tests override as needed
 beforeEach(() => {
@@ -56,6 +61,19 @@ beforeEach(() => {
   fetchCocktails.mockResolvedValue({ data: { items: [], page: 1, page_size: 100, total: 0 } });
   // No theme in response — keeps handleThemeChange from touching window.matchMedia
   getMeRequest.mockResolvedValue({ data: { username: "", email: "" } });
+  getCocktailById.mockResolvedValue({
+    data: {
+      id: 1,
+      name: "Margarita",
+      category: "Classic",
+      alcoholic: "Alcoholic",
+      glass: "Cocktail glass",
+      instructions: "Shake and strain.",
+      thumb_url: null,
+      ingredients: [{ ingredient: "Tequila", measure: "2 oz" }],
+    },
+  });
+  getMyNoteRequest.mockRejectedValue({ response: { status: 404 } });
 });
 
 // ---------------------------------------------------------------------------
@@ -236,6 +254,50 @@ describe("AvailableCocktails page", () => {
     expect(screen.getByTestId("available-input")).toBeInTheDocument();
     // No ingredients added → suggestions-empty is visible immediately
     expect(screen.getByTestId("suggestions-empty")).toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CocktailDetail
+// ---------------------------------------------------------------------------
+describe("CocktailDetail page", () => {
+  it("shows skeleton while cocktail is loading", () => {
+    getCocktailById.mockReturnValue(new Promise(() => {})); // never resolves
+    render(
+      <MemoryRouter initialEntries={["/cocktails/1"]}>
+        <Routes>
+          <Route path="/cocktails/:id" element={<CocktailDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(document.querySelector(".skeleton")).toBeInTheDocument();
+  });
+
+  it("renders cocktail name and ingredients after load", async () => {
+    render(
+      <MemoryRouter initialEntries={["/cocktails/1"]}>
+        <Routes>
+          <Route path="/cocktails/:id" element={<CocktailDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: /margarita/i })).toBeInTheDocument();
+    });
+    expect(screen.getByText(/tequila/i)).toBeInTheDocument();
+  });
+
+  it("shows sign-in prompt in notes section when unauthenticated", async () => {
+    render(
+      <MemoryRouter initialEntries={["/cocktails/1"]}>
+        <Routes>
+          <Route path="/cocktails/:id" element={<CocktailDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByText(/sign in/i)).toBeInTheDocument();
+    });
   });
 });
 

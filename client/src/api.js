@@ -59,4 +59,11 @@ export const addPantryItemRequest = (token, ingredientName) =>
 export const removePantryItemRequest = (token, ingredientKey) =>
   API.delete(`/api/v1/pantry/${encodeURIComponent(ingredientKey)}`, authConfig(token));
 
+export const getMyNoteRequest = (token, drinkId) =>
+  API.get(`/api/v1/cocktails/${drinkId}/my-note`, authConfig(token));
+export const upsertMyNoteRequest = (token, drinkId, payload) =>
+  API.put(`/api/v1/cocktails/${drinkId}/my-note`, payload, authConfig(token));
+export const deleteMyNoteRequest = (token, drinkId) =>
+  API.delete(`/api/v1/cocktails/${drinkId}/my-note`, authConfig(token));
+
 export default API;

@@ -1,0 +1,129 @@
+name: PR Quality Gate - Build & Test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-quality-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  backend-tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.txt
+          python -m pip install -r backend/requirements-dev.txt
+
+      - name: Run backend tests
+        run: python -m pytest backend/tests -v
+        env:
+          GINNY_SECRET_KEY: ci-only-test-secret
+
+  frontend-checks:
+    name: Frontend lint, test, and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix client
+
+      - name: Run ESLint
+        run: npm --prefix client run lint
+
+      - name: Run frontend tests
+        run: npm --prefix client run test
+
+      - name: Build frontend
+        run: npm --prefix client run build
+
+  browser-tests:
+    name: Browser tests
+    needs:
+      - backend-tests
+      - frontend-checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            client/package-lock.json
+
+      - name: Install application dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r backend/requirements.txt
+          npm ci
+          npm ci --prefix client
+
+      - name: Create and seed test database
+        run: npm run setup
+        env:
+          GINNY_SECRET_KEY: ci-only-test-secret
+
+      - name: Install Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Run browser tests
+        run: npm run test:e2e -- --workers=1
+        env:
+          CI: "true"
+          GINNY_SECRET_KEY: ci-only-test-secret
+
+      - name: Upload Playwright traces after failure
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-test-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

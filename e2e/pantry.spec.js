@@ -1,25 +1,31 @@
 // @ts-check
 const { test, expect } = require("@playwright/test");
+const { createTestUser, deleteTestUser } = require("./helpers/testUser");
 
-const timestamp = Date.now();
-const USER = {
-  username: `pantryuser${timestamp}`,
-  email: `pantryuser${timestamp}@example.com`,
-  password: "Secure1!Pass",
-};
+let user;
 
 test.beforeEach(async ({ page }) => {
+  user = createTestUser("pantryuser");
+
   await page.goto("/register");
-  await page.getByPlaceholder("Username").fill(USER.username);
-  await page.getByPlaceholder("Email").fill(USER.email);
-  await page.getByPlaceholder("Password").fill(USER.password);
+  await page.getByPlaceholder("Username").fill(user.username);
+  await page.getByPlaceholder("Email").fill(user.email);
+  await page.getByPlaceholder("Password").fill(user.password);
   await page.getByRole("button", { name: "Register" }).click();
   await page.waitForURL("**/login");
 
-  await page.getByLabel("Email").fill(USER.email);
-  await page.getByLabel("Password").fill(USER.password);
+  await page.getByLabel("Email").fill(user.email);
+  await page.getByLabel("Password").fill(user.password);
   await page.getByRole("button", { name: /log in/i }).click();
   await page.waitForURL("/");
+});
+
+test.afterEach(async ({ page, request }) => {
+  try {
+    await deleteTestUser({ page, request, user });
+  } finally {
+    user = null;
+  }
 });
 
 test("pantry: add and remove an ingredient", async ({ page }) => {

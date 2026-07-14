@@ -1,13 +1,20 @@
 // @ts-check
 const { test, expect } = require("@playwright/test");
+const { createTestUser, deleteTestUser } = require("./helpers/testUser");
 
-// Unique credentials per run — no dependency on pre-existing user data
-const timestamp = Date.now();
-const USER = {
-  username: `user${timestamp}`,
-  email: `user${timestamp}@example.com`,
-  password: "Secure1!Pass",
-};
+let user;
+
+test.beforeEach(() => {
+  user = createTestUser("journeyuser");
+});
+
+test.afterEach(async ({ page, request }) => {
+  try {
+    await deleteTestUser({ page, request, user });
+  } finally {
+    user = null;
+  }
+});
 
 // Known cocktail that exists in the seed data
 const SEARCH_TERM = "Margarita";
@@ -20,9 +27,9 @@ test("user journey: register → login → search → detail → favorite → se
   // ------------------------------------------------------------------
   await test.step("register new user", async () => {
     await page.goto("/register");
-    await page.getByPlaceholder("Username").fill(USER.username);
-    await page.getByPlaceholder("Email").fill(USER.email);
-    await page.getByPlaceholder("Password").fill(USER.password);
+    await page.getByPlaceholder("Username").fill(user.username);
+    await page.getByPlaceholder("Email").fill(user.email);
+    await page.getByPlaceholder("Password").fill(user.password);
     await page.getByRole("button", { name: "Register" }).click();
     await page.waitForURL("**/login");
   });
@@ -31,8 +38,8 @@ test("user journey: register → login → search → detail → favorite → se
   // 2. Log in (already redirected to /login)
   // ------------------------------------------------------------------
   await test.step("log in", async () => {
-    await page.getByLabel("Email").fill(USER.email);
-    await page.getByLabel("Password").fill(USER.password);
+    await page.getByLabel("Email").fill(user.email);
+    await page.getByLabel("Password").fill(user.password);
     await page.getByRole("button", { name: /log in/i }).click();
     await page.waitForURL("/");
     await expect(page.getByRole("button", { name: /logout/i })).toBeVisible();

@@ -5,11 +5,13 @@ const ProtectedRoute = ({ children }) => {
   const { authError, authStatus, isAuthenticated } = useAuth();
 
   if (authStatus === 'checking') {
-    return <p className="text-center mt-10">Checking session...</p>;
+    return (
+      <p className="py-20 text-center text-muted">Checking session…</p>
+    );
   }
 
   if (authStatus === 'error') {
-    return <p className="text-center mt-10">{authError}</p>;
+    return <p className="py-20 text-center text-danger">{authError}</p>;
   }
 
   if (!isAuthenticated) {

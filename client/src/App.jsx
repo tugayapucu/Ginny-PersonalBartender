@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { MotionConfig } from "motion/react";
 
 import Home from "./pages/Home";
 import Recipes from "./pages/Recipes";
@@ -18,22 +19,24 @@ import ProtectedRoute from "./components/ProtectedRoute";
 
 import "./App.css";
 
-import { AuthProvider } from "./hooks/useAuth";
+import AuthProvider from "./hooks/AuthProvider";
 
 function App() {
   useEffect(() => {
+    // `system` follows the OS preference; the `.light-mode` class opts into the
+    // light variant over the dark default surfaces.
     const savedTheme = localStorage.getItem("theme") || "system";
 
     const applyTheme = (theme) => {
-      if (theme === "dark") {
-        document.body.classList.add("dark-mode");
-      } else if (theme === "light") {
-        document.body.classList.remove("dark-mode");
+      if (theme === "light") {
+        document.body.classList.add("light-mode");
+      } else if (theme === "dark") {
+        document.body.classList.remove("light-mode");
       } else {
         const prefersDark = window.matchMedia(
           "(prefers-color-scheme: dark)"
         ).matches;
-        document.body.classList.toggle("dark-mode", prefersDark);
+        document.body.classList.toggle("light-mode", !prefersDark);
       }
     };
 
@@ -42,7 +45,7 @@ function App() {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = () => {
       if ((localStorage.getItem("theme") || "system") === "system") {
-        document.body.classList.toggle("dark-mode", mediaQuery.matches);
+        document.body.classList.toggle("light-mode", !mediaQuery.matches);
       }
     };
 
@@ -52,8 +55,9 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
-        <Navbar />
+      <MotionConfig reducedMotion="user">
+        <Router>
+          <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/recipes" element={<Recipes />} />
@@ -93,9 +97,10 @@ function App() {
               </ProtectedRoute>
             }
           />
-        </Routes>
-        <Footer />
-      </Router>
+          </Routes>
+          <Footer />
+        </Router>
+      </MotionConfig>
     </AuthProvider>
   );
 }

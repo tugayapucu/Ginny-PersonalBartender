@@ -27,11 +27,12 @@ vi.mock("../api", () => ({
   getMyNoteRequest: vi.fn(),
   upsertMyNoteRequest: vi.fn(),
   deleteMyNoteRequest: vi.fn(),
+  getRecommendationsRequest: vi.fn(),
 }));
 
 import useAuth from "../hooks/useAuth";
 import useFavorites from "../hooks/useFavorites";
-import { fetchCocktails, getMeRequest, getPantryRequest, getCocktailById, getMyNoteRequest } from "../api";
+import { fetchCocktails, getMeRequest, getPantryRequest, getCocktailById, getMyNoteRequest, getRecommendationsRequest } from "../api";
 
 import Navbar from "../components/Navbar";
 import Login from "../pages/Login";
@@ -42,6 +43,7 @@ import Settings from "../pages/Settings";
 import Pantry from "../pages/Pantry";
 import AvailableCocktails from "../pages/AvailableCocktails";
 import CocktailDetail from "../pages/CocktailDetail";
+import Recommendations from "../pages/Recommendations";
 
 // Default unauthenticated state — individual tests override as needed
 beforeEach(() => {
@@ -74,6 +76,7 @@ beforeEach(() => {
     },
   });
   getMyNoteRequest.mockRejectedValue({ response: { status: 404 } });
+  getRecommendationsRequest.mockResolvedValue({ data: [] });
 });
 
 // ---------------------------------------------------------------------------
@@ -297,6 +300,85 @@ describe("CocktailDetail page", () => {
     );
     await waitFor(() => {
       expect(screen.getByText(/sign in/i)).toBeInTheDocument();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Recommendations
+// ---------------------------------------------------------------------------
+describe("Recommendations page", () => {
+  it("renders heading while loading", () => {
+    useAuth.mockReturnValue({
+      authStatus: "authenticated",
+      isAuthenticated: true,
+      authError: "",
+      token: "fake-token",
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    getRecommendationsRequest.mockReturnValue(new Promise(() => {})); // never resolves
+    render(
+      <MemoryRouter>
+        <Recommendations />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole("heading", { name: /your recommendations/i })).toBeInTheDocument();
+  });
+
+  it("renders recommendation cards after load", async () => {
+    useAuth.mockReturnValue({
+      authStatus: "authenticated",
+      isAuthenticated: true,
+      authError: "",
+      token: "fake-token",
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    getRecommendationsRequest.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          name: "Margarita",
+          category: "Classic",
+          alcoholic: "Alcoholic",
+          glass: "Cocktail glass",
+          thumb_url: null,
+          score: 1.0,
+          reasons: ["Uses 2 of 2 ingredients from your pantry"],
+        },
+      ],
+    });
+    render(
+      <MemoryRouter>
+        <Recommendations />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByTestId("recommendations-list")).toBeInTheDocument();
+      expect(screen.getAllByTestId("recommendation-item")).toHaveLength(1);
+    });
+    expect(screen.getByText("Margarita")).toBeInTheDocument();
+    expect(screen.getByText(/ingredients from your pantry/i)).toBeInTheDocument();
+  });
+
+  it("shows empty state when no recommendations are returned", async () => {
+    useAuth.mockReturnValue({
+      authStatus: "authenticated",
+      isAuthenticated: true,
+      authError: "",
+      token: "fake-token",
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+    getRecommendationsRequest.mockResolvedValue({ data: [] });
+    render(
+      <MemoryRouter>
+        <Recommendations />
+      </MemoryRouter>
+    );
+    await waitFor(() => {
+      expect(screen.getByText(/nothing to show yet/i)).toBeInTheDocument();
     });
   });
 });

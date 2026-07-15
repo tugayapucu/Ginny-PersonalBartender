@@ -141,3 +141,12 @@ class NoteResponse(BaseModel):
     notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+
+# ---------------------------------------------------------------------------
+# Recommendations schemas
+# ---------------------------------------------------------------------------
+
+class RecommendationItem(CocktailSummary):
+    score: float
+    reasons: List[str]

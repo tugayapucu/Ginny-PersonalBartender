@@ -66,4 +66,7 @@ export const upsertMyNoteRequest = (token, drinkId, payload) =>
 export const deleteMyNoteRequest = (token, drinkId) =>
   API.delete(`/api/v1/cocktails/${drinkId}/my-note`, authConfig(token));
 
+export const getRecommendationsRequest = (token, limit = 10) =>
+  API.get("/api/v1/recommendations", { params: { limit }, ...authConfig(token) });
+
 export default API;

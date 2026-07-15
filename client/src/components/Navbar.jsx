@@ -83,6 +83,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
+              <NavItem to="/recommendations">For You</NavItem>
               <NavItem to="/pantry">My Pantry</NavItem>
               <NavItem to="/settings">Settings</NavItem>
               <button

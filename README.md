@@ -1,5 +1,7 @@
 # Ginny — Personal Bartender
 
+[![CI](https://github.com/tugayapucu/PersonalBartender/actions/workflows/ci.yml/badge.svg)](https://github.com/tugayapucu/PersonalBartender/actions/workflows/ci.yml)
+
 A cocktail discovery web app with user accounts, search, favourites, and ingredient-based lookup.
 Built as a full-stack portfolio project to demonstrate a production-shaped backend (FastAPI, JWT auth, Alembic migrations) paired with a modern React frontend.
 

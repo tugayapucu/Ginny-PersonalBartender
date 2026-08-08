@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel any in-flight run for the same branch/PR so each push only
+# keeps the most recent run alive.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Backend — Python test suite
+  # ---------------------------------------------------------------------------
+  backend-tests:
+    name: Backend tests (Python 3.14)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install -r backend/requirements-dev.txt
+
+      - name: Run backend tests
+        run: python -m pytest backend/tests -v
+        env:
+          # Minimal secret so JWT signing works in the test environment.
+          # This value is not a real secret — tests use an in-memory SQLite DB.
+          GINNY_SECRET_KEY: ci-only-test-secret
+
+  # ---------------------------------------------------------------------------
+  # Frontend — lint, unit tests, and production build
+  # ---------------------------------------------------------------------------
+  frontend-checks:
+    name: Frontend lint, test & build (Node 24)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          # npm ci uses the client lockfile; root package-lock.json is only
+          # needed for E2E (Playwright) which runs in pr-quality-gate.yml.
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci --prefix client
+
+      - name: Lint
+        run: npm --prefix client run lint
+
+      - name: Unit tests
+        run: npm --prefix client run test
+
+      - name: Production build
+        run: npm --prefix client run build
+
+# ---------------------------------------------------------------------------
+# E2E / browser tests are intentionally omitted from this workflow.
+# They require a running backend + seeded database and Playwright browser
+# binaries, which add ~5 minutes of setup. They already run in
+# .github/workflows/pr-quality-gate.yml on every pull request.
+# To add them here in the future:
+#   1. Add a third job that needs: [backend-tests, frontend-checks]
+#   2. Install Python + Node, run `npm run setup`, then `npm run test:e2e`
+# ---------------------------------------------------------------------------

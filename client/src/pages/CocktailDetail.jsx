@@ -184,8 +184,10 @@ const CocktailDetail = () => {
           <div className="space-y-5">
             {/* Star rating */}
             <div>
-              <p className="mb-2 text-sm font-medium text-muted">Rating</p>
+              <p id="rating-label" className="mb-2 text-sm font-medium text-muted">Rating</p>
               <div
+                role="group"
+                aria-labelledby="rating-label"
                 className="flex gap-1"
                 onMouseLeave={() => setHoverRating(0)}
                 data-testid="star-rating"
@@ -229,7 +231,7 @@ const CocktailDetail = () => {
               />
             </div>
 
-            {noteError && <p className="text-sm text-danger">{noteError}</p>}
+            {noteError && <p role="alert" className="text-sm text-danger">{noteError}</p>}
 
             <div className="flex flex-wrap items-center gap-3">
               <button
@@ -237,6 +239,7 @@ const CocktailDetail = () => {
                 onClick={handleSave}
                 disabled={noteSaving || !isDirty}
                 className="btn-primary disabled:opacity-50"
+                data-testid="save-note-btn"
               >
                 {noteSaving ? "Saving…" : savedNote ? "Update note" : "Save note"}
               </button>

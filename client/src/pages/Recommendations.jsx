@@ -40,11 +40,13 @@ const Recommendations = () => {
       </div>
 
       {loading && (
-        <p className="py-20 text-center text-muted">Loading recommendations…</p>
+        <p className="py-20 text-center text-muted" data-testid="recommendations-loading">
+          Loading recommendations…
+        </p>
       )}
 
       {error && (
-        <div className="card mx-auto max-w-md p-10 text-center">
+        <div role="alert" className="card mx-auto max-w-md p-10 text-center" data-testid="recommendations-error">
           <p className="mb-6 text-muted">{error}</p>
           <button
             onClick={() => window.location.reload()}

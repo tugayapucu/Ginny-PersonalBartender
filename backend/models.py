@@ -86,7 +86,7 @@ class UserPantryItem(Base):
     ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=True)
     ingredient_name = Column(String, nullable=False)
     ingredient_key = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     user = relationship("User", back_populates="pantry_items")
     ingredient = relationship("Ingredient")
@@ -103,8 +103,8 @@ class UserCocktailNote(Base):
     drink_id = Column(Integer, ForeignKey("drinks.id"), nullable=False)
     rating = Column(Integer, nullable=True)
     notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.datetime.now(datetime.timezone.utc))
 
     user = relationship("User", back_populates="cocktail_notes")
     drink = relationship("Drink")

@@ -47,7 +47,7 @@ def upsert_note(
     else:
         note.rating = rating
         note.notes = notes
-        note.updated_at = datetime.datetime.utcnow()
+        note.updated_at = datetime.datetime.now(datetime.timezone.utc)
     db.commit()
     db.refresh(note)
     return _row_to_dict(note)
